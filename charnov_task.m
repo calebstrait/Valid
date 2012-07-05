@@ -1,29 +1,60 @@
 function charnov_task(monkeysFirstInitial, trialTotal)
-    %% Global variables.
+    % ---------------------------------------------- %
+    % -------------- Global variables -------------- %
+    % ---------------------------------------------- %
     
-    leaveBarHeight = 0;    % Height of the gray leave bar.
-    trackedEye     = 2;    % Eyelink code for which eye is being tracked.
-    trialType      = 0;    % Arrangement of bars on the screen.
-    window         = NaN;  % Reference to window used for drawing.
+    % Colors.
+    colorBackground = [50 50 50];     % Background color.
+    colorFixDot     = [255 255 0];    % Fixation dot color.
     
-    %% Setup.
+    % Coordinates.
+    centerX         = 512;            % X pixel coordinate for the screen center.
+    centerY         = 384;            % Y pixel coordinate for the screen center.
+    dotRadius       = 10;             % Radius of the fixation dot.
+    fixBoundXMax    = centerX + 87.5; % Max x distance from fixation point to fixate.
+    fixBoundXMin    = centerX - 87.5; % Min x distance from fixation point to fixate.
+    fixBoundYMax    = centerY + 87.5; % Max y distance from fixation point to fixate.
+    fixBoundYMin    = centerY - 87.5; % Mix y distance from fixation point to fixate.
     
-    % Screen settigns and preferences.
-    HideCursor;
+    % References.
+    monkeyScreen    = 1;              % Number of the screen the monkey sees.
+    trackedEye      = 2;              % Eyelink code for which eye is being tracked.
+    window          = NaN;            % Reference to window used for drawing.
+    
+    % Times.
+    minFixTime      = 0.2;            % Min time monkey must fixate to start trial.
+    timeToFix       = 30;             % Amount of time the monkey has to fixate.
+    
+    
+    % ---------------------------------------------- %
+    % ------------------- Setup -------------------- %
+    % ---------------------------------------------- %
+    
+    % Screen.
     Screen('Preference', 'VisualDebugLevel', 0);
     Screen('Preference', 'Verbosity', 0);
-    window = Screen('OpenWindow', 1, 0);
+    window = Screen('OpenWindow', monkeyScreen, colorBackground);
     
-    % Call helper function to setup Eyelink.
+    % Eyelink.
     setup_eyelink;
     
-    %% Main experiment loop.
+    % ---------------------------------------------- %
+    % ------------ Main experiment loop ------------ %
+    % ---------------------------------------------- %
     
     for i = 1:trialTotal
         run_single_trial;
     end
     
-    %% Helper functions.
+    % ---------------------------------------------- %
+    % ----------------- Functions ------------------ %
+    % ---------------------------------------------- %
+    
+    % Displays and removes the error state on the screen.
+    function error_state()
+        % show error screen for 3 secs
+        % restart trial
+    end
     
     % Determines if the eye has fixated within the given bounds
     % for the given duration before the given timeout occurs.
@@ -43,7 +74,6 @@ function charnov_task(monkeysFirstInitial, trialTotal)
                 checkFixBreak = fix_break_check(xBoundMin, xBoundMax, ...
                                                 yBoundMin, yBoundMax, ...
                                                 duration);
-                
                 if checkFixBreak == false
                     % Fixation was obtained for desired duration.
                     fixation = true;
@@ -59,7 +89,10 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     
     % Draws the fixation point on the screen.
     function draw_fixation_point()
-        Screen('FillOval', window, focusColor, [0 100 100 100]);
+        Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
+                                                 (centerY - dotRadius) ...
+                                                 (centerX + dotRadius) ...
+                                                 (centerY + dotRadius)]);
         Screen('Flip', window);
     end
     
@@ -98,17 +131,23 @@ function charnov_task(monkeysFirstInitial, trialTotal)
         sampledPosition = Eyelink('NewestFloatSample');
         xCoord = sampledPosition.gx(trackedEye);
         yCoord = sampledPosition.gy(trackedEye);
+        disp(strcat('x: ', num2str(xCoord), '; ', 'y: ', num2str(yCoord)));
     end
     
     % Runs a single trial using current global variable values.
     function run_single_trial()
-        %draw_fixation_point();
+        draw_fixation_point;
         
-        % keep checking eye position
-            % if 30 secs have passed without fixation
-                % send error screen
-                % restart trial
-
+        fixating = check_fixation(fixBoundXMin, fixBoundXMax, ...
+                                  fixBoundYMin, fixBoundYMax, ...
+                                  minFixTime, timeToFix);
+        
+        if fixating
+            
+        else
+            error_state;
+        end
+        
         % if (fixating)
             % draw bars with fixation point remaining
             
@@ -136,7 +175,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
                     % send error screen
                     % restart trial
     end
-
+    
     % Rewards monkey using the juicer with the passed duration.
     function reward(rewardDuration)
         % Get a reference the juicer device.
