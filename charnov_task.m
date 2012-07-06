@@ -5,6 +5,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     
     % Colors.
     colorBackground = [50 50 50];     % Background color.
+    colorError      = [0 100 0];      % Color of square in error state.
     colorFixDot     = [255 255 0];    % Fixation dot color.
     colorLeaveBar   = [175 176 175];  % Color of the stay bar stimulus.
     colorStayBar    = [0 163 218];    % Color of the leave bar stimulus.
@@ -22,6 +23,10 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     trackedEye      = 2;              % Eyelink code for which eye is being tracked.
     window          = NaN;            % Reference to window used for drawing.
     
+    % Rewards.
+    currJuice       = .12;            % Current reward amount in microliters.
+    juiceUnit       = .02;             % Amount reward is reduced by for stay trials.
+    
     % Shrinking.
     shrinkRate      = 65;             % Bar shrink rate.
     
@@ -30,6 +35,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     barWidth        = 80;             % Width of all the bar stimuli.
     currLBarHeight  = 0;              % Current height of the leave bar.
     dotRadius       = 10;             % Radius of the fixation dot.
+    errorSquare     = 100;            % Half the width of the error square.
     leaveBarHeights = [32.5  65  ...  % All the possible leave bar heights,
                        97.5  130 ...  %     which are based on shrink times
                        162.5 195 ...  %     ranging from 0.5 to 10.5 s in
@@ -45,8 +51,9 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     
     % Times.
     holdFixTime     = 0.5;            % Duration to hold fixation before choosing.
+    ITI             = 1;              % Intertrial interval.
     minFixTime      = 0.2;            % Min time monkey must fixate to start trial.
-    timeToFix       = 30;             % Amount of time the monkey has to fixate.
+    timeToFix       = 30;              % Amount of time the monkey has to fixate.
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     
     % Trial.
@@ -79,9 +86,13 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     
     % Displays and removes the error state on the screen.
     function error_state()
-        disp('IN ERROR STATE');
-        % show error screen for 3 secs
-        % restart trial
+        Screen('FillRect', window, colorError, [(centerX - errorSquare) ...
+                                                  (centerY - errorSquare) ...
+                                                  (centerX + errorSquare) ...
+                                                  (centerY + errorSquare)]);
+        Screen('Flip', window);
+        
+        pause(3);
     end
     
     % Determines if the eye has fixated within the given bounds
@@ -205,11 +216,11 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     end
     
     % Draws the fixation point on the screen.
-    function draw_fixation_point()
-        Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
-                                                 (centerY - dotRadius) ...
-                                                 (centerX + dotRadius) ...
-                                                 (centerY + dotRadius)]);
+    function draw_fixation_point(color)
+        Screen('FillOval', window, color, [(centerX - dotRadius) ...
+                                           (centerY - dotRadius) ...
+                                           (centerX + dotRadius) ...
+                                           (centerY + dotRadius)]);
         Screen('Flip', window);
     end
     
@@ -295,7 +306,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     
     % Runs a single trial using current global variable values.
     function run_single_trial()
-        draw_fixation_point;
+        draw_fixation_point(colorFixDot);
         
         fixating = check_fixation(fixBoundXMin, fixBoundXMax, ...
                                   fixBoundYMin, fixBoundYMax, ...
@@ -318,7 +329,9 @@ function charnov_task(monkeysFirstInitial, trialTotal)
             
             % Enter error state if fixation lost, otherwise continue trial.
             if checkFixBreak
-               error_state; 
+               error_state;
+               run_single_trial;
+               return;
             else
                 % Redraw bars without fixation (remove fixation point).
                 draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
@@ -338,7 +351,15 @@ function charnov_task(monkeysFirstInitial, trialTotal)
                                         sBXMin, sBXMax, sBYMin, sBYMax);
                     
                     if shrunk
-                        disp('IT IS SHRUNK');
+                        draw_fixation_point(colorBackground);
+                        currJuice = .12;
+                        if trialType == 0
+                            trialType = 1;
+                        else
+                            trialType = 0;
+                        end
+                        newLBarHeight = true;
+                        pause(ITI);
                     else
                         disp('IT IS NOT SHRUNK :('); 
                     end     
@@ -349,7 +370,16 @@ function charnov_task(monkeysFirstInitial, trialTotal)
                                         sBXMin, sBXMax, sBYMin, sBYMax);
                     
                     if shrunk
-                        disp('IT IS SHRUNK');
+                        % WILL NEED TO CHANGE currJuice.
+                        reward(currJuice);
+                        % MIGHT WANT TO CHANGE THIS WAY OF CLEARING SCREEN.
+                        draw_fixation_point(colorBackground);
+                        currJuice = currJuice - juiceUnit;
+                        if currJuice < 0
+                            currJuice = 0;
+                        end
+                        newLBarHeight = false;
+                        pause(ITI);
                     else
                         disp('IT IS NOT SHRUNK :('); 
                     end    
@@ -360,42 +390,6 @@ function charnov_task(monkeysFirstInitial, trialTotal)
         else
             error_state;
         end
-        
-        %* if (fixating)
-            %* draw bars with fixation point remaining
-            
-            %* wait for 500 ms while checking fixation continuously
-                %* if fixation hasn't been broken.
-                    %* remove fixation point (cue to saccade)
-
-                    
-                    
-                    %* continuously check monkey's eye position
-                        % *if fixate on a new target==true && target==blue
-                        
-                        
-                            % start shrinking blue bar
-                            % after bar is fully shrunk,
-                                % reward the monkey with current reward val
-                                % reduce reward val by .02 mL
-                                    % if reward is reduced to 0, leave at 0
-                                % ITI of 1 sec with nothing on screen
-
-                        % *elseif fixate on new target==true && target==gray
-                        
-                            % set the makenewleavebarheight var to true
-                            % start shrinking gray bar
-                            % after bar is fully shrunk
-                                % clear screen
-                                % ITI of 1 sec with nothing on screen
-                                % flip trial type
-                                % reset value of gray bar
-                                
-                                
-                                
-                 %* else
-                    %* send error screen
-                    %* restart trial
     end
     
     % Rewards monkey using the juicer with the passed duration.
