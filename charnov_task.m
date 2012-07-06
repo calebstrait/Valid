@@ -23,9 +23,10 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     trackedEye      = 2;              % Eyelink code for which eye is being tracked.
     window          = NaN;            % Reference to window used for drawing.
     
-    % Rewards.
-    currJuice       = .12;            % Current reward amount in microliters.
-    juiceUnit       = .02;             % Amount reward is reduced by for stay trials.
+    % Reward.
+    currJuice       = 1.6;            % Current reward amount in microliters.
+    juiceUnit       = 0.1;            % Amount reward is reduced by for each stay trial.
+    pourTimeOneMl   = 0.3;            % Number of secs juicer needs to pour 1 mL.
     
     % Shrinking.
     shrinkRate      = 65;             % Bar shrink rate.
@@ -50,10 +51,11 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     stayBarHeight   = 26;             % Height of the blue stay bar.
     
     % Times.
+    errorStateTime  = 3;              % Duration of the error state.
     holdFixTime     = 0.5;            % Duration to hold fixation before choosing.
     ITI             = 1;              % Intertrial interval.
     minFixTime      = 0.2;            % Min time monkey must fixate to start trial.
-    timeToFix       = 30;              % Amount of time the monkey has to fixate.
+    timeToFix       = 30;             % Amount of time the monkey has to fixate.
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     
     % Trial.
@@ -65,8 +67,6 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     % ---------------------------------------------- %
     
     % Screen.
-    Screen('Preference', 'VisualDebugLevel', 0);
-    Screen('Preference', 'Verbosity', 0);
     window = Screen('OpenWindow', monkeyScreen, colorBackground);
     
     % Eyelink.
@@ -84,19 +84,19 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     % ----------------- Functions ------------------ %
     % ---------------------------------------------- %
     
-    % Displays and removes the error state on the screen.
+    % Displays the error state on the screen.
     function error_state()
         Screen('FillRect', window, colorError, [(centerX - errorSquare) ...
-                                                  (centerY - errorSquare) ...
-                                                  (centerX + errorSquare) ...
-                                                  (centerY + errorSquare)]);
+                                                (centerY - errorSquare) ...
+                                                (centerX + errorSquare) ...
+                                                (centerY + errorSquare)]);
         Screen('Flip', window);
         
-        pause(3);
+        pause(errorStateTime);
     end
     
     % Determines if the eye has fixated within the given bounds
-    % or the given duration before the given timeout occurs.
+    % for the given duration before the given timeout occurs.
     function [fixation, area] = check_fixation(xBoundMin, xBoundMax, ...
                                                yBoundMin, yBoundMax, ...
                                                xBoundMin2nd, xBoundMax2nd, ...
@@ -108,7 +108,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
         while timeout > (GetSecs - startTime)
             [xCoord, yCoord] = get_eye_coords;
             
-            % Check for eye entering either of two locations.
+            % Determine if one or two locations are being tracked.
             if checkTwo
                 % Determine if eye is within either of the two fixation boundaries.
                 if (xCoord >= xBoundMin && xCoord <= xBoundMax && ...
@@ -127,7 +127,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
                             % Fixation was obtained for desired duration.
                             fixation = true;
                             area = 'first';
-
+                            
                             return;
                         end
                     else
@@ -140,24 +140,25 @@ function charnov_task(monkeysFirstInitial, trialTotal)
                             % Fixation was obtained for desired duration.
                             fixation = true;
                             area = 'second';
-
+                            
                             return;
                         end
                     end
                 end
-            % Otherwise just watch for eye entering one location.
             else
-                % Determine if eye is within the fixation boundaries.
+                % Determine if eye is within the fixation boundary.
                 if xCoord >= xBoundMin && xCoord <= xBoundMax && ...
                    yCoord >= yBoundMin && yCoord <= yBoundMax
                     % Determine if eye maintained fixation for given duration.
                     checkFixBreak = fix_break_check(xBoundMin, xBoundMax, ...
                                                     yBoundMin, yBoundMax, ...
                                                     duration);
+                    
                     if checkFixBreak == false
                         % Fixation was obtained for desired duration.
                         fixation = true;
-
+                        area = 'single';
+                        
                         return;
                     end
                 end
@@ -168,7 +169,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
         fixation = false;
         area = 'none';
     end
-
+    
     % Figures out current bar positions based on global variables.
     function [lBXMin, lBXMax, lBYMin, lBYMax, ...
               sBXMin, sBXMax, sBYMin, sBYMax] = bar_positioning()
@@ -232,45 +233,29 @@ function charnov_task(monkeysFirstInitial, trialTotal)
             % Stay bar.
             Screen('FillRect', window, colorStayBar, [stayBarXMin stayBarYMin ...
                                                       stayBarXMax stayBarYMax]);
+            
             % Leave bar.
             Screen('FillRect', window, colorLeaveBar, [leaveBarXMin leaveBarYMin ...
                                                        leaveBarXMax leaveBarYMax]);
-            if fixPoint                           
+            
+            if fixPoint
                 % Redraw fixation point to keep it displayed.
                 Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
-                                                 (centerY - dotRadius) ...
-                                                 (centerX + dotRadius) ...
-                                                 (centerY + dotRadius)]);
+                                                         (centerY - dotRadius) ...
+                                                         (centerX + dotRadius) ...
+                                                         (centerY + dotRadius)]);
             end
-
-            Screen('Flip', window);
         elseif strcmp(whichToDraw, 'notstay') == 1
             % Leave bar.
             Screen('FillRect', window, colorLeaveBar, [leaveBarXMin leaveBarYMin ...
                                                        leaveBarXMax leaveBarYMax]);
-            if fixPoint                           
-                % Redraw fixation point to keep it displayed.
-                Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
-                                                 (centerY - dotRadius) ...
-                                                 (centerX + dotRadius) ...
-                                                 (centerY + dotRadius)]);
-            end
-
-            Screen('Flip', window);
         elseif strcmp(whichToDraw, 'notleave') == 1
             % Stay bar.
             Screen('FillRect', window, colorStayBar, [stayBarXMin stayBarYMin ...
                                                       stayBarXMax stayBarYMax]);
-            if fixPoint                           
-                % Redraw fixation point to keep it displayed.
-                Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
-                                                 (centerY - dotRadius) ...
-                                                 (centerX + dotRadius) ...
-                                                 (centerY + dotRadius)]);
-            end
-
-            Screen('Flip', window);
         end
+        
+        Screen('Flip', window);
     end
     
     % Checks if the eye breaks fixation bounds before end of duration.
@@ -300,6 +285,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     % Returns the current x and y coordinants of the given eye.
     function [xCoord, yCoord] = get_eye_coords()
         sampledPosition = Eyelink('NewestFloatSample');
+        
         xCoord = sampledPosition.gx(trackedEye);
         yCoord = sampledPosition.gy(trackedEye);
     end
@@ -393,11 +379,12 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     end
     
     % Rewards monkey using the juicer with the passed duration.
-    function reward(rewardDuration)
-        % Get a reference the juicer device.
-        daq = DaqDeviceIndex;
-        
-        if (rewardDuration ~= 0)
+    function reward(rewardAmount)
+        if rewardAmount ~= 0
+            % Get a reference the juicer device and set reward duration.
+            daq = DaqDeviceIndex;
+            rewardDuration = rewardAmount * pourTimeOneMl;
+            
             % Open juicer.
             DaqAOut(daq, 0, .6);
             
@@ -451,6 +438,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
         
         % Put Eyelink in output mode.
         Eyelink('SendKeyButton', double('o'), 0, 10);
+        
         % Start recording.
         Eyelink('SendKeyButton', double('o'), 0, 10);
     end
@@ -473,14 +461,17 @@ function charnov_task(monkeysFirstInitial, trialTotal)
                 newCurrHeight = currHeight - shrinkRate;
                 
                 if newCurrHeight <= 0
-                   % Redraw bars to shrink.
-                   draw_bars(0, 0, 0, 0, ...
-                             sBXMin, sBXMax, sBYMin, sBYMax, false, 'notleave');
-                   
-                   % Recursive call.
-                   shrunk = shrink_bar('leave', shrinkRate, newCurrHeight, ...
-                                       0, 0, 0, 0, ...
-                                       sBXMin, sBXMax, sBYMin, sBYMax);
+                    % Current height should be zero at minimum.
+                    newCurrHeight = 0;
+                    
+                    % Redraw only the non-shrinking bar.
+                    draw_bars(0, 0, 0, 0, ...
+                              sBXMin, sBXMax, sBYMin, sBYMax, false, 'notleave');
+                    
+                    % Recursive call.
+                    shrunk = shrink_bar('leave', shrinkRate, newCurrHeight, ...
+                                        0, 0, 0, 0, ...
+                                        sBXMin, sBXMax, sBYMin, sBYMax);
                 else
                     newYMin = lBYMin + (shrinkRate / 2);
                     newYMax = lBYMax - (shrinkRate / 2);
