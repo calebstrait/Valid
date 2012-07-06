@@ -22,6 +22,9 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     trackedEye      = 2;              % Eyelink code for which eye is being tracked.
     window          = NaN;            % Reference to window used for drawing.
     
+    % Shrinking.
+    shrinkRate      = 65;             % Bar shrink rate.
+    
     % Stimuli.
     barToFixDist    = 300;            % Distance from fixation center to bar edge.
     barWidth        = 80;             % Width of all the bar stimuli.
@@ -47,7 +50,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     
     % Trial.
-    newLBarHeight   = true;              % Whether or not new stay bar height is needed.
+    newLBarHeight   = true;           % Whether or not new stay bar height is needed.
     trialType       = 1;              % Current trial. Determines bar placement.
     
     % ---------------------------------------------- %
@@ -213,22 +216,50 @@ function charnov_task(monkeysFirstInitial, trialTotal)
     % Draws two bars on the screen.
     function draw_bars(leaveBarXMin, leaveBarXMax, leaveBarYMin, ...
                        leaveBarYMax, stayBarXMin, stayBarXMax, ...
-                       stayBarYMin, stayBarYMax, fixPoint)
-        % Stay bar.
-        Screen('FillRect', window, colorStayBar, [stayBarXMin stayBarYMin ...
-                                                  stayBarXMax stayBarYMax]);
-        % Leave bar.
-        Screen('FillRect', window, colorLeaveBar, [leaveBarXMin leaveBarYMin ...
-                                                   leaveBarXMax leaveBarYMax]);
-        if fixPoint                           
-            % Redraw fixation point to keep it displayed.
-            Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
-                                             (centerY - dotRadius) ...
-                                             (centerX + dotRadius) ...
-                                             (centerY + dotRadius)]);
+                       stayBarYMin, stayBarYMax, fixPoint, whichToDraw)
+        if strcmp(whichToDraw, 'both') == 1
+            % Stay bar.
+            Screen('FillRect', window, colorStayBar, [stayBarXMin stayBarYMin ...
+                                                      stayBarXMax stayBarYMax]);
+            % Leave bar.
+            Screen('FillRect', window, colorLeaveBar, [leaveBarXMin leaveBarYMin ...
+                                                       leaveBarXMax leaveBarYMax]);
+            if fixPoint                           
+                % Redraw fixation point to keep it displayed.
+                Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
+                                                 (centerY - dotRadius) ...
+                                                 (centerX + dotRadius) ...
+                                                 (centerY + dotRadius)]);
+            end
+
+            Screen('Flip', window);
+        elseif strcmp(whichToDraw, 'notstay') == 1
+            % Leave bar.
+            Screen('FillRect', window, colorLeaveBar, [leaveBarXMin leaveBarYMin ...
+                                                       leaveBarXMax leaveBarYMax]);
+            if fixPoint                           
+                % Redraw fixation point to keep it displayed.
+                Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
+                                                 (centerY - dotRadius) ...
+                                                 (centerX + dotRadius) ...
+                                                 (centerY + dotRadius)]);
+            end
+
+            Screen('Flip', window);
+        elseif strcmp(whichToDraw, 'notleave') == 1
+            % Stay bar.
+            Screen('FillRect', window, colorStayBar, [stayBarXMin stayBarYMin ...
+                                                      stayBarXMax stayBarYMax]);
+            if fixPoint                           
+                % Redraw fixation point to keep it displayed.
+                Screen('FillOval', window, colorFixDot, [(centerX - dotRadius) ...
+                                                 (centerY - dotRadius) ...
+                                                 (centerX + dotRadius) ...
+                                                 (centerY + dotRadius)]);
+            end
+
+            Screen('Flip', window);
         end
-        
-        Screen('Flip', window);
     end
     
     % Checks if the eye breaks fixation bounds before end of duration.
@@ -278,7 +309,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
             
             % Display the bars.
             draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
-                      sBXMin, sBXMax, sBYMin, sBYMax, true);
+                      sBXMin, sBXMax, sBYMin, sBYMax, true, 'both');
             
             % Determine if eye maintained fixation for given duration.
             checkFixBreak = fix_break_check(fixBoundXMin, fixBoundXMax, ...
@@ -291,7 +322,7 @@ function charnov_task(monkeysFirstInitial, trialTotal)
             else
                 % Redraw bars without fixation (remove fixation point).
                 draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
-                          sBXMin, sBXMax, sBYMin, sBYMax, false);
+                          sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
             end
             
             % Find out if monkey makes a saccade to either bar.
@@ -301,9 +332,27 @@ function charnov_task(monkeysFirstInitial, trialTotal)
             if saccade
                 % Determine which choice monkey made.
                 if strcmp(choice, 'first')
-                    disp('FIRST CHOICE SELECTED');
+                    % Shrink the leave bar.
+                    shrunk = shrink_bar('leave', shrinkRate, currLBarHeight, ...
+                                        lBXMin, lBXMax, lBYMin, lBYMax, ...
+                                        sBXMin, sBXMax, sBYMin, sBYMax);
+                    
+                    if shrunk
+                        disp('IT IS SHRUNK');
+                    else
+                        disp('IT IS NOT SHRUNK :('); 
+                    end     
                 else
-                    disp('SECOND CHOICE SELECTED');
+                    % Shrink the stay bar.
+                    shrunk = shrink_bar('stay',shrinkRate, stayBarHeight, ...
+                                        lBXMin, lBXMax, lBYMin, lBYMax, ...
+                                        sBXMin, sBXMax, sBYMin, sBYMax);
+                    
+                    if shrunk
+                        disp('IT IS SHRUNK');
+                    else
+                        disp('IT IS NOT SHRUNK :('); 
+                    end    
                 end
             else
                 error_state;
@@ -412,7 +461,79 @@ function charnov_task(monkeysFirstInitial, trialTotal)
         Eyelink('SendKeyButton', double('o'), 0, 10);
     end
     
-    % Shrinks the height of the passed bar to zero at given rate.
-    function shrink_bar(barToShrink, shrinkRate)
+    % Recursively shrinks the height of the passed bar to zero at given rate.
+    function shrunk = shrink_bar(barToShrink, shrinkRate, currHeight, ...
+                                 lBXMin, lBXMax, lBYMin, lBYMax, ...
+                                 sBXMin, sBXMax, sBYMin, sBYMax)
+        % Base case (bar has zero height).
+        if currHeight == 0 || currHeight < 0
+            shrunk = true;
+            
+            return;
+        else
+            % Shrink leave bar.
+            if strcmp(barToShrink, 'leave') == 1
+                % Wait for a second to allow for 65 pixel/s shrink rate.
+                pause(1);
+                
+                newCurrHeight = currHeight - shrinkRate;
+                
+                if newCurrHeight <= 0
+                   % Redraw bars to shrink.
+                   draw_bars(0, 0, 0, 0, ...
+                             sBXMin, sBXMax, sBYMin, sBYMax, false, 'notleave');
+                   
+                   % Recursive call.
+                   shrunk = shrink_bar('leave', shrinkRate, newCurrHeight, ...
+                                       0, 0, 0, 0, ...
+                                       sBXMin, sBXMax, sBYMin, sBYMax);
+                else
+                    newYMin = lBYMin + (shrinkRate / 2);
+                    newYMax = lBYMax - (shrinkRate / 2);
+                    
+                    % Redraw bars to shrink.
+                    draw_bars(lBXMin, lBXMax, newYMin, newYMax, ...
+                              sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
+                    
+                    % Recursive call.
+                    shrunk = shrink_bar('leave', shrinkRate, newCurrHeight, ...
+                                        lBXMin, lBXMax, newYMin, newYMax, ...
+                                        sBXMin, sBXMax, sBYMin, sBYMax);
+                end
+            % Shrink stay bar.
+            elseif strcmp(barToShrink, 'stay') == 1
+                % Wait for a second to allow for 65 pixel/s shrink rate.
+                pause(1);
+                
+                newCurrHeight = currHeight - shrinkRate;
+                
+                if newCurrHeight <= 0
+                   % Redraw bars to shrink.
+                   draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
+                             0, 0, 0, 0, false, 'notstay');
+                   
+                   % Recursive call.
+                   shrunk = shrink_bar('leave', shrinkRate, newCurrHeight, ...
+                                       lBXMin, lBXMax, lBYMin, lBYMax, ...
+                                       0, 0, 0, 0);
+                else
+                    newYMin = lBYMin + (shrinkRate / 2);
+                    newYMax = lBYMax - (shrinkRate / 2);
+                    
+                    % Redraw bars to shrink.
+                    draw_bars(lBXMin, lBXMax, newYMin, newYMax, ...
+                              sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
+                    
+                    % Recursive call.
+                    shrunk = shrink_bar('leave', shrinkRate, newCurrHeight, ...
+                                        lBXMin, lBXMax, newYMin, newYMax, ...
+                                        sBXMin, sBXMax, sBYMin, sBYMax);
+                end
+            else
+                shrunk = false;
+                
+                return;
+            end
+        end
     end
 end
