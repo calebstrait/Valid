@@ -1,4 +1,4 @@
-function charnov_task(monkeysInitial, trialTotal)
+function charnov(monkeysInitial, trialTotal)
     % ---------------------------------------------- %
     % -------------- Global variables -------------- %
     % ---------------------------------------------- %
@@ -315,7 +315,7 @@ function charnov_task(monkeysInitial, trialTotal)
         end
         
         dateStr = datestr(now, 'yymmdd');
-        filename = [initial dateStr '.' cell '1.DS.mat'];
+        filename = [initial dateStr '.' cell '1.C.mat'];
         folderName = [initial dateStr];
         
         % Make and enter a folder where .mat files will be saved.
@@ -331,7 +331,7 @@ function charnov_task(monkeysInitial, trialTotal)
         while fileNum ~= 0
             if exist(filename, 'file') == 2
                 fileNum = fileNum + 1;
-                filename = [initial dateStr '.' cell num2str(fileNum) '.DS.mat'];
+                filename = [initial dateStr '.' cell num2str(fileNum) '.C.mat'];
             else
                 fileNum = 0;
             end
