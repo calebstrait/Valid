@@ -21,18 +21,30 @@
 
 function valid(monkeysInitial)
     taskDirectory = '/Users/bhayden/Documents/AaronMATLAB/randomfour';
-    taskTrialTotal = 1;
+    taskTrialTotal = 100;
     completedBlocks = 0;
     currentBlock = 0;
+    running = true;
     
-    for j = 1:4
+    while running
+        % Check keys for commands.
+        keyPress = key_check;
+        key_execute(keyPress);
+                
         currentBlock = currentBlock + 1;
         
         % Get a random order to present the following four tasks.
         order = randperm(4);
         
-        for i = 1:size(order, 2)
-            taskNum = order(i);
+        taskCounter = 1;
+        
+        while running && taskCounter <= 4
+            % Check keys for commands.
+            keyPress = key_check;
+            key_execute(keyPress);
+                
+            taskNum = order(taskCounter);
+            taskCounter = taskCounter + 1;
             
             % Go to directory with all the task scripts.
             cd(taskDirectory);
@@ -40,18 +52,66 @@ function valid(monkeysInitial)
             % Run the charnov task.
             if taskNum == 1
                 charnov(monkeysInitial, taskTrialTotal, currentBlock);
+                
+                % Check keys for commands.
+                keyPress = key_check;
+                key_execute(keyPress);
             % Run the stagopsfinal task.
             elseif taskNum == 2
                 stagopsfinal(monkeysInitial, taskTrialTotal, currentBlock);
+                
+                % Check keys for commands.
+                keyPress = key_check;
+                key_execute(keyPress);
             % Run the dietselection task.
             elseif taskNum == 3
                 dietselection(monkeysInitial, taskTrialTotal, currentBlock);
+                
+                % Check keys for commands.
+                keyPress = key_check;
+                key_execute(keyPress);
             % Run the fadeops task.
             elseif taskNum == 4
                 fadeops(monkeysInitial, taskTrialTotal, currentBlock);
+                
+                % Check keys for commands.
+                keyPress = key_check;
+                key_execute(keyPress);
             end
         end
         
         completedBlocks = completedBlocks + 1;
+    end
+    
+    % Checks to see what key was pressed.
+    function key = key_check()
+        % Assign key codes to some variables.
+        juiceKey = KbName('space');
+        stopKey  = KbName('ESCAPE');
+        
+        % Make sure default values of key are false.
+        key.escape  = false;
+        key.juice   = false;
+        
+        % Get info about any key that was just pressed.
+        [keyIsDown, secs, keyCode] = KbCheck;
+        
+        % Check pressed key against the keyCode array of 256 key codes.
+        if keyCode(juiceKey)
+            key.juice = true;
+        elseif keyCode(stopKey)
+            key.escape = true;
+        end
+    end
+    
+    % Execute a passsed key command.
+    function key_execute(keyRef)
+        % Stop task at end of current trial.
+        if keyRef.escape == true
+            running = false;
+        % Give an instance juice reward.
+        elseif keyRef.juice == true
+            reward(spaceReward);
+        end
     end
 end

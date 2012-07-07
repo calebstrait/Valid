@@ -49,6 +49,7 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     juiceMax        = 1.6;            % Max amount of juice monkey can get.
     juiceUnit       = 0.1;            % Amount reward is reduced by for each stay trial.
     pourTimeOneMl   = 0.3;            % Number of secs juicer needs to pour 1 mL.
+    spaceReward     = 0.2;            % Reward given to monkey when spacebar pressed.
     
     % Saving.
     validData       = '/TestData/Valid';  % Directory where .mat files are saved.
@@ -83,6 +84,7 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     holdFixTime     = 0.5;            % Duration to hold fixation before choosing.
     ITI             = 1;              % Intertrial interval.
     minFixTime      = 0.2;            % Min time monkey must fixate to start trial.
+    pauseDelay      = 1;              % Unit of time that is used to pause the trial.
     timeToFix       = 30;             % Amount of time the monkey has to fixate.
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     
@@ -108,23 +110,66 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     % ------------ Main experiment loop ------------ %
     % ---------------------------------------------- %
     
-    for i = 1:trialTotal
+    trialCount = 0;
+    running = true;
+    
+    while trialTotal > trialCount && running
+        keyPress = key_check;
+        key_execute(keyPress);
+        
         run_single_trial;
+        
+        trialCount = trialCount + 1;
     end
     
     % ---------------------------------------------- %
     % ----------------- Functions ------------------ %
     % ---------------------------------------------- %
     
-    % Displays the error state on the screen.
-    function error_state()
-        Screen('FillRect', window, colorError, [(centerX - errorSquare) ...
-                                                (centerY - errorSquare) ...
-                                                (centerX + errorSquare) ...
-                                                (centerY + errorSquare)]);
-        Screen('Flip', window);
-        
-        pause(errorStateTime);
+    % Figures out current bar positions based on global variables.
+    function [lBXMin, lBXMax, lBYMin, lBYMax, ...
+              sBXMin, sBXMax, sBYMin, sBYMax] = bar_positioning()
+        % Determine positioning - leave bar: left side; stay bar: right side.
+        if trialType == 0
+            lBXMin = centerX - barToFixDist - barWidth;
+            lBXMax = centerX - barToFixDist;
+            
+            % Recalulate height of leave bar if needed.
+            if newLBarHeight
+                set_leave_bar;
+                
+                lBYMin = centerY - currLBarHeight / 2;
+                lBYMax = centerY + currLBarHeight / 2;
+            else
+                lBYMin = centerY - currLBarHeight / 2;
+                lBYMax = centerY + currLBarHeight / 2;
+            end
+            
+            sBXMin = centerX + barToFixDist;
+            sBXMax = centerX + barToFixDist + barWidth;
+            sBYMin = centerY - stayBarHeight / 2;
+            sBYMax = centerY + stayBarHeight / 2;
+        % Determine positioning - leave bar: right side; stay bar: left side.
+        else
+            lBXMin = centerX + barToFixDist;
+            lBXMax = centerX + barToFixDist + barWidth;
+            
+            % Recalulate height of leave bar if needed.
+            if newLBarHeight
+                set_leave_bar;
+                
+                lBYMin = centerY - currLBarHeight / 2;
+                lBYMax = centerY + currLBarHeight / 2;
+            else
+                lBYMin = centerY - currLBarHeight / 2;
+                lBYMax = centerY + currLBarHeight / 2;
+            end
+            
+            sBXMin = centerX - barToFixDist - barWidth;
+            sBXMax = centerX - barToFixDist;
+            sBYMin = centerY - stayBarHeight / 2;
+            sBYMax = centerY + stayBarHeight / 2;
+        end
     end
     
     % Determines if the eye has fixated within the given bounds
@@ -138,6 +183,10 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         
         % Keep checking for fixation until timeout occurs.
         while timeout > (GetSecs - startTime)
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
+            
             [xCoord, yCoord] = get_eye_coords;
             
             % Determine if one or two locations are being tracked.
@@ -202,61 +251,6 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         area = 'none';
     end
     
-    % Figures out current bar positions based on global variables.
-    function [lBXMin, lBXMax, lBYMin, lBYMax, ...
-              sBXMin, sBXMax, sBYMin, sBYMax] = bar_positioning()
-        % Determine positioning - leave bar: left side; stay bar: right side.
-        if trialType == 0
-            lBXMin = centerX - barToFixDist - barWidth;
-            lBXMax = centerX - barToFixDist;
-            
-            % Recalulate height of leave bar if needed.
-            if newLBarHeight
-                set_leave_bar;
-                
-                lBYMin = centerY - currLBarHeight / 2;
-                lBYMax = centerY + currLBarHeight / 2;
-            else
-                lBYMin = centerY - currLBarHeight / 2;
-                lBYMax = centerY + currLBarHeight / 2;
-            end
-            
-            sBXMin = centerX + barToFixDist;
-            sBXMax = centerX + barToFixDist + barWidth;
-            sBYMin = centerY - stayBarHeight / 2;
-            sBYMax = centerY + stayBarHeight / 2;
-        % Determine positioning - leave bar: right side; stay bar: left side.
-        else
-            lBXMin = centerX + barToFixDist;
-            lBXMax = centerX + barToFixDist + barWidth;
-            
-            % Recalulate height of leave bar if needed.
-            if newLBarHeight
-                set_leave_bar;
-                
-                lBYMin = centerY - currLBarHeight / 2;
-                lBYMax = centerY + currLBarHeight / 2;
-            else
-                lBYMin = centerY - currLBarHeight / 2;
-                lBYMax = centerY + currLBarHeight / 2;
-            end
-            
-            sBXMin = centerX - barToFixDist - barWidth;
-            sBXMax = centerX - barToFixDist;
-            sBYMin = centerY - stayBarHeight / 2;
-            sBYMax = centerY + stayBarHeight / 2;
-        end
-    end
-    
-    % Draws the fixation point on the screen.
-    function draw_fixation_point(color)
-        Screen('FillOval', window, color, [(centerX - dotRadius) ...
-                                           (centerY - dotRadius) ...
-                                           (centerX + dotRadius) ...
-                                           (centerY + dotRadius)]);
-        Screen('Flip', window);
-    end
-    
     % Draws two bars on the screen.
     function draw_bars(leaveBarXMin, leaveBarXMax, leaveBarYMin, ...
                        leaveBarYMax, stayBarXMin, stayBarXMax, ...
@@ -290,6 +284,30 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         Screen('Flip', window);
     end
     
+    % Draws the fixation point on the screen.
+    function draw_fixation_point(color)
+        Screen('FillOval', window, color, [(centerX - dotRadius) ...
+                                           (centerY - dotRadius) ...
+                                           (centerX + dotRadius) ...
+                                           (centerY + dotRadius)]);
+        Screen('Flip', window);
+    end
+    
+    % Displays the error state on the screen.
+    function error_state()
+        % Check for pressed keys.
+        keyPress = key_check;
+        key_execute(keyPress);
+        
+        Screen('FillRect', window, colorError, [(centerX - errorSquare) ...
+                                                (centerY - errorSquare) ...
+                                                (centerX + errorSquare) ...
+                                                (centerY + errorSquare)]);
+        Screen('Flip', window);
+        
+        pause(errorStateTime);
+    end
+    
     % Checks if the eye breaks fixation bounds before end of duration.
     function fixationBreak = fix_break_check(xBoundMin, xBoundMax, ...
                                              yBoundMin, yBoundMax, ...
@@ -298,6 +316,10 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         
         % Keep checking for fixation breaks for the entire duration.
         while duration > (GetSecs - fixStartTime)
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
+        
             [xCoord, yCoord] = get_eye_coords;
             
             % Determine if the eye has left the fixation boundaries.
@@ -324,26 +346,33 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     
     % Checks to see what key was pressed.
     function key = key_check()
+        % Assign key codes to some variables.
         juiceKey = KbName('space');
-        pauseKey = KbName('RightControl');
         stopKey  = KbName('ESCAPE');
         
-        key.pressed = 0;
-        key.escape  = 0;
-        key.juice   = 0;
-        key.pause   = 0;
+        % Make sure default values of key are false.
+        key.escape  = false;
+        key.juice   = false;
         
+        % Get info about any key that was just pressed.
         [keyIsDown, secs, keyCode] = KbCheck;
         
+        % Check pressed key against the keyCode array of 256 key codes.
         if keyCode(juiceKey)
-            key.juice = 1;
-            key.pressed = 1;
-        elseif keyCode(pauseKey)
-            key.pause = 1;
-            key.pressed = 1;
+            key.juice = true;
         elseif keyCode(stopKey)
-            key.escape = 1;
-            key.pressed = 1;
+            key.escape = true;
+        end
+    end
+    
+    % Execute a passsed key command.
+    function key_execute(keyRef)
+        % Stop task at end of current trial.
+        if keyRef.escape == true
+            running = false;
+        % Give an instance juice reward.
+        elseif keyRef.juice == true
+            reward(spaceReward);
         end
     end
     
@@ -395,8 +424,33 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         saveCommand = ['save ' filename ' ' varName];
     end
     
+    % Rewards monkey using the juicer with the passed duration.
+    function reward(rewardAmount)
+        if rewardAmount ~= 0
+            % Get a reference the juicer device and set reward duration.
+            daq = DaqDeviceIndex;
+            rewardDuration = rewardAmount * pourTimeOneMl;
+            
+            % Open juicer.
+            DaqAOut(daq, 0, .6);
+            
+            startTime = GetSecs;
+            
+            % Keep looping to keep juicer open until reward end.
+            while (GetSecs - startTime) < rewardDuration
+            end
+            
+            % Close juicer.
+            DaqAOut(daq, 0, 0);
+        end
+    end
+    
     % Runs a single trial using current global variable values.
     function run_single_trial()
+        % Check for pressed keys.
+        keyPress = key_check;
+        key_execute(keyPress);
+        
         draw_fixation_point(colorFixDot);
         
         fixating = check_fixation(fixBoundXMin, fixBoundXMax, ...
@@ -405,6 +459,10 @@ function charnov(monkeysInitial, trialTotal, currBlock)
                                   minFixTime, timeToFix, false);
         
         if fixating
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
+        
             % Determine bar positioning.
             [lBXMin, lBXMax, lBYMin, lBYMax, ...
              sBXMin, sBXMax, sBYMin, sBYMax] = bar_positioning;
@@ -432,12 +490,19 @@ function charnov(monkeysInitial, trialTotal, currBlock)
                 draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
                           sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
             end
-            
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
+        
             % Find out if monkey makes a choice by saccading to either bar.
             [saccade, choice] = check_fixation(lBXMin, lBXMax, lBYMin, lBYMax, ...
                                                sBXMin, sBXMax, sBYMin, sBYMax, ...
                                                minFixTime, timeToSaccade, true);
             
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
+        
             if saccade
                 % Determine which choice monkey made.
                 if strcmp(choice, 'first')
@@ -520,27 +585,6 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         end
     end
     
-    % Rewards monkey using the juicer with the passed duration.
-    function reward(rewardAmount)
-        if rewardAmount ~= 0
-            % Get a reference the juicer device and set reward duration.
-            daq = DaqDeviceIndex;
-            rewardDuration = rewardAmount * pourTimeOneMl;
-            
-            % Open juicer.
-            DaqAOut(daq, 0, .6);
-            
-            startTime = GetSecs;
-            
-            % Keep looping to keep juicer open until reward end.
-            while (GetSecs - startTime) < rewardDuration
-            end
-            
-            % Close juicer.
-            DaqAOut(daq, 0, 0);
-        end
-    end
-    
     % Randomly chooses a new height for the leave bar.
     function set_leave_bar()
         % Get a random integer from the range 1 to 21 (inclusive).
@@ -591,8 +635,16 @@ function charnov(monkeysInitial, trialTotal, currBlock)
                                  sBXMin, sBXMax, sBYMin, sBYMax)
         % Shrink either the leave or the stay bar.
         if strcmp(barToShrink, 'leave') == 1
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
+        
             % Wait for a second to allow for 65 pixel/s shrink rate.
             pause(shrinkInterval);
+            
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
             
             newCurrHeight = currHeight - shrinkRate;
             
@@ -619,9 +671,17 @@ function charnov(monkeysInitial, trialTotal, currBlock)
                                     sBXMin, sBXMax, sBYMin, sBYMax);
             end
         elseif strcmp(barToShrink, 'stay') == 1
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
+        
             % Wait for a second to allow for 65 pixel/s shrink rate.
             pause(shrinkInterval);
             
+            % Check for pressed keys.
+            keyPress = key_check;
+            key_execute(keyPress);
+        
             newCurrHeight = currHeight - shrinkRate;
             
             if newCurrHeight <= 0
