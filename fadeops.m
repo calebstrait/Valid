@@ -1,6 +1,10 @@
+% ---------------------------------------------- %
+% -- Aaron's modified version for valid. task -- %
+% ---------------------------------------------- %
+
 %CES 3/2/2011
 
-function FadeOps(initial)
+function FadeOps(initial, trialTotal, currBlock)
 
 %****** TASK
 task = 0;
@@ -47,32 +51,14 @@ fixcuecolor = [255 255 255]; %Rect fixation cue color
 backcolor = [50 50 50]; %Background color
 maincolor = [255 255 0]; %Color of fixation dot
 
-% Create data file*****************
-% initial is subject initial  e.g. 'G' for George
-cd /TestData/FadeOps;
-dateS = datestr(now, 'yymmdd');
-filename = [initial dateS '.1.FO' num2str(task) '.mat'];
-foldername = [initial dateS];
-warning off all;
-try
-    mkdir(foldername)
-end
-warning on all;
-cd(foldername)
-trynum = 1;
-while(trynum ~= 0)
-    if(exist(filename)~=0)
-        trynum = trynum +1;
-        filename = [initial dateS '.' num2str(trynum) '.FO' num2str(task) '.mat'];
-    else
-        savename = [initial dateS '.' num2str(trynum) '.FO' num2str(task) '.mat'];
-        trynum = 0;
-    end
-end
+% Sets up everything needed for saving data.
+validData = '/TestData/Valid';
+prepare_for_saving;
+
 home
 
 % Setup Eyelink*****************
-HideCursor; %This hides the Psychtoolbox startup Screen
+%HideCursor; %This hides the Psychtoolbox startup Screen
 oldEnableFlag = Screen('Preference', 'VisualDebugLevel', 0);% warning('off','MATLAB:dispatcher:InexactCaseMatch')
 oldLevel = Screen('Preference', 'Verbosity', 0);%Hides PTB Warnings
 global window; window = Screen('OpenWindow', 1, 0);
@@ -95,16 +81,16 @@ Eyelink('SendKeyButton',double('o'),0,10); % Send the keypress 'o' to put Eyelin
 Eyelink('SendKeyButton',double('o'),0,10);
 
 % Count trials for the whole day*****************
-cd ..;
-daystrials = 0;
-thesefiles = dir(foldername);
-cd(foldername);
-fileIndex = find(~[thesefiles.isdir]);
-for i = 1:length(fileIndex)
-    thisfile = thesefiles(fileIndex(i)).name;
-    thisdata = importdata(thisfile);
-    daystrials = daystrials + length(thisdata);
-end
+% cd ..;
+% daystrials = 0;
+% thesefiles = dir(foldername);
+% cd(foldername);
+% fileIndex = find(~[thesefiles.isdir]);
+% for i = 1:length(fileIndex)
+%     thisfile = thesefiles(fileIndex(i)).name;
+%     thisdata = importdata(thisfile);
+%     daystrials = daystrials + length(thisdata);
+% end
 
 % Ask to set up*****************
 Screen('FillRect', window, backcolor);
@@ -147,13 +133,14 @@ buffer = 0;
 choice = 0;
 timeofchoice = GetSecs - ((wait*waitrange) + buffer + iti);
 reactiontime = 0;
-savecommand = ['save ' savename ' data'];
 correct = 0;
 possible = 0;
 pcent2graph(1) = 0;
 starttime = GetSecs;
 
-while(continuing);
+% Also counts trials to determine when to end experiment.
+trialCount = 0;
+while(continuing && trialCount <= trialTotal)
     % Display Count*****************
     if(dispcount == 1 && (step == 3 || step == 4))
         disp([num2str(GetSecs - dispstart)]);
@@ -173,21 +160,102 @@ while(continuing);
         elseif(fixating == 2)
             Screen('FillRect', window, fixcuecolor, [(Rxmin-fixbox) ((Rymax - (rightwait * height))-fixbox) (Rxmax+fixbox) (Rymax+fixbox)]);
         end
-        eval(['Lcolor = color' num2str(leftcolor) ';']);
-        eval(['Rcolor = color' num2str(rightcolor) ';']);
+        
+        %eval(['Lcolor = color' num2str(leftcolor) ';']);
+        %eval(['Rcolor = color' num2str(rightcolor) ';']);
+        
+        % ----- Super hacky way to not use eval() above ----- %
+        
+        LcolorStr = strcat('color', num2str(leftcolor));
+        RcolorStr = strcat('color', num2str(rightcolor));
+        
+        if strcmp(LcolorStr, 'color1') == 1
+            Lcolor = color1;
+        elseif strcmp(LcolorStr, 'color2') == 1
+            Lcolor = color2;
+        elseif strcmp(LcolorStr, 'color3') == 1
+            Lcolor = color3;
+        elseif strcmp(LcolorStr, 'color4') == 1
+            Lcolor = color4;
+        elseif strcmp(LcolorStr, 'color5') == 1
+            Lcolor = color5;
+        elseif strcmp(LcolorStr, 'color6') == 1
+            Lcolor = color6;
+        end
+        
+        if strcmp(RcolorStr, 'color1') == 1
+            Rcolor = color1;
+        elseif strcmp(RcolorStr, 'color2') == 1
+            Rcolor = color2;
+        elseif strcmp(RcolorStr, 'color3') == 1
+            Rcolor = color3;
+        elseif strcmp(RcolorStr, 'color4') == 1
+            Rcolor = color4;
+        elseif strcmp(RcolorStr, 'color5') == 1
+            Rcolor = color5;
+        elseif strcmp(RcolorStr, 'color6') == 1
+            Rcolor = color6;
+        end
+        
+        % --------------------------------------------------- %
+        
         Screen('FillRect', window, Lcolor, [Lxmin (Lymax - (leftwait * height)) Lxmax Lymax]);
         Screen('FillRect', window, Rcolor, [Rxmin (Rymax - (rightwait * height)) Rxmax Rymax]);
     end
     if(step == 3)
         if(choice == 1)
             LyminF = Lymax - ((((wait*waitrange)-(GetSecs - timeofchoice)) / (wait*waitrange)) * (wait * height));
-            eval(['Lcolor = color' num2str(leftcolor) ';']);
+            
+            %eval(['Lcolor = color' num2str(leftcolor) ';']);
+            
+            % ----- Super hacky way to not use eval() above ----- %
+        
+            LcolorStr = strcat('color', num2str(leftcolor));
+
+            if strcmp(LcolorStr, 'color1') == 1
+                Lcolor = color1;
+            elseif strcmp(LcolorStr, 'color2') == 1
+                Lcolor = color2;
+            elseif strcmp(LcolorStr, 'color3') == 1
+                Lcolor = color3;
+            elseif strcmp(LcolorStr, 'color4') == 1
+                Lcolor = color4;
+            elseif strcmp(LcolorStr, 'color5') == 1
+                Lcolor = color5;
+            elseif strcmp(LcolorStr, 'color6') == 1
+                Lcolor = color6;
+            end
+
+            % --------------------------------------------------- %
+            
             if(Lymax > LyminF)
                 Screen('FillRect', window, Lcolor, [Lxmin LyminF Lxmax Lymax]);
             end
         elseif(choice == 2)
             RyminF = Rymax - ((((wait*waitrange)-(GetSecs - timeofchoice)) / (wait*waitrange)) * (wait * height));
-            eval(['Rcolor = color' num2str(rightcolor) ';']);
+            
+            %eval(['Rcolor = color' num2str(rightcolor) ';']);
+            
+            % ----- Super hacky way to not use eval() above ----- %
+            
+            RcolorStr = strcat('color', num2str(rightcolor));
+            
+            if strcmp(RcolorStr, 'color1') == 1
+                Rcolor = color1;
+            elseif strcmp(RcolorStr, 'color2') == 1
+                Rcolor = color2;
+            elseif strcmp(RcolorStr, 'color3') == 1
+                Rcolor = color3;
+            elseif strcmp(RcolorStr, 'color4') == 1
+                Rcolor = color4;
+            elseif strcmp(RcolorStr, 'color5') == 1
+                Rcolor = color5;
+            elseif strcmp(RcolorStr, 'color6') == 1
+                Rcolor = color6;
+            end
+
+            % --------------------------------------------------- %
+            
             if(Rymax > RyminF)
                 Screen('FillRect', window, Rcolor, [Rxmin RyminF Rxmax Rymax]);
             end
@@ -265,7 +333,29 @@ while(continuing);
         dispstart = GetSecs;
     elseif(step == 3 && GetSecs > (timeofchoice + (wait*waitrange)))
         step = 4;
-        eval(['rewardsize = reward' num2str(choicecolor) ';']);
+        
+        %eval(['rewardsize = reward' num2str(choicecolor) ';']);
+        
+        % ----- Super hacky way to not use eval() above ----- %
+        
+        rewardSizeStr = strcat('reward', num2str(choicecolor));
+        
+        if strcmp(rewardSizeStr, 'reward1') == 1
+            rewardsize = reward1;
+        elseif strcmp(rewardSizeStr, 'reward2') == 1
+            rewardsize = reward2;
+        elseif strcmp(rewardSizeStr, 'reward3') == 1
+            rewardsize = reward3;
+        elseif strcmp(rewardSizeStr, 'reward4') == 1
+            rewardsize = reward4;
+        elseif strcmp(rewardSizeStr, 'reward5') == 1
+            rewardsize = reward5;
+        elseif strcmp(rewardSizeStr, 'reward6') == 1
+            rewardsize = reward6;
+        end
+        
+        % --------------------------------------------------- %
+        
         reward(rewardsize);
     elseif(step == 4 && GetSecs > (timeofchoice + (wait*waitrange) + buffer))
         disp(GetSecs - timeofchoice)
@@ -285,19 +375,20 @@ while(continuing);
         data(trial).waitrange = waitrange;
         data(trial).buffrange = buffrange;
         data(trial).reactiontime = (timeofchoice - reactiontime);
-        eval(savecommand);
+        eval(saveCommand);
         
     elseif(((step == 5 && GetSecs > (timeofchoice + (wait*waitrange) + buffer + iti)) && (pause == 0)))
         step = 1;
         
-        %Print to command window
-        disp(' ');
-        home;
-        if(trial ~= (trial + daystrials))
-            disp(['Trial #' num2str(trial) '/' num2str(trial + daystrials)]);
-        else
-            disp(['Trial #' num2str(trial)]);
-        end
+%         %Print to command window
+%         disp(' ');
+%         home;
+%         if(trial ~= (trial + daystrials))
+%             disp(['Trial #' num2str(trial) '/' num2str(trial + daystrials)]);
+%         else
+%             disp(['Trial #' num2str(trial)]);
+%         end
+        
         elapsed = GetSecs-starttime;
         disp(sprintf('Elapsed time: %.0fh %.0fm', floor(elapsed/3600), floor((elapsed-(floor(elapsed/3600)*3600))/60)));
         if(trial > 0)
@@ -346,6 +437,9 @@ while(continuing);
         if(task == 2)
             iti = itiT2;
         end
+        
+        % Increment the trial number.
+        trialCount = trialCount + 1;
     end
 end
 if(length(pcent2graph) > 1)
@@ -354,6 +448,54 @@ end
 Eyelink('stoprecording');
 sca;
 %keyboard
+
+% Makes a folder and file where data will be saved.
+function prepare_for_saving()
+    cd(validData);
+
+    % Check if cell ID was passed in with monkey's initial.
+    if numel(initial) == 1
+        cell = '';
+    else
+        initial = initial(1);
+        cell = initial(2);
+    end
+
+    dateStr = datestr(now, 'yymmdd');
+    filename = [initial dateStr '.' cell '1.FO.mat'];
+    folderNameDay = [initial dateStr];
+    folderNameBlock = ['Block' num2str(currBlock)];
+    varName = 'data';   
+
+    % Make and/or enter a folder where trial block folders are located.
+    if exist(folderNameDay, 'dir') == 7
+        cd(folderNameDay);
+    else
+        mkdir(folderNameDay);
+        cd(folderNameDay);
+    end
+
+    % Make and/or enter a folder where .mat files will be saved.
+    if exist(folderNameBlock, 'dir') == 7
+        cd(folderNameBlock);
+    else
+        mkdir(folderNameBlock);
+        cd(folderNameBlock);
+    end
+
+    % Make sure the filename for the .mat file is not already used.
+    fileNum = 1;
+    while fileNum ~= 0
+        if exist(filename, 'file') == 2
+            fileNum = fileNum + 1;
+            filename = [initial dateStr '.' cell num2str(fileNum) '.FO.mat'];
+        else
+            fileNum = 0;
+        end
+    end
+
+    saveCommand = ['save ' filename ' ' varName];
+end
 end
 
 function a = keyCapture()

@@ -1,4 +1,25 @@
-function charnov(monkeysInitial, trialTotal)
+% Copyright (c) 2012 Aaron Roth
+% 
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+% 
+% The above copyright notice and this permission notice shall be included in
+% all copies or substantial portions of the Software.
+% 
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+% THE SOFTWARE.
+% 
+
+function charnov(monkeysInitial, trialTotal, currBlock)
     % ---------------------------------------------- %
     % -------------- Global variables -------------- %
     % ---------------------------------------------- %
@@ -30,9 +51,9 @@ function charnov(monkeysInitial, trialTotal)
     pourTimeOneMl   = 0.3;            % Number of secs juicer needs to pour 1 mL.
     
     % Saving.
-    charnovData     = '/TestData/Charnov';  % Directory where .mat files are saved.
-    saveCommand     = NaN;                  % Command string that will save .mat files.
-    varName         = 'data';               % Name of the var to save in the workspace.
+    validData       = '/TestData/Valid';  % Directory where .mat files are saved.
+    saveCommand     = NaN;                % Command string that will save .mat files.
+    varName         = 'data';             % Name of the var to save in the workspace.
     
     % Shrinking.
     shrinkRate      = 65;             % Bar shrink rate.
@@ -301,9 +322,34 @@ function charnov(monkeysInitial, trialTotal)
         yCoord = sampledPosition.gy(trackedEye);
     end
     
+    % Checks to see what key was pressed.
+    function key = key_check()
+        juiceKey = KbName('space');
+        pauseKey = KbName('RightControl');
+        stopKey  = KbName('ESCAPE');
+        
+        key.pressed = 0;
+        key.escape  = 0;
+        key.juice   = 0;
+        key.pause   = 0;
+        
+        [keyIsDown, secs, keyCode] = KbCheck;
+        
+        if keyCode(juiceKey)
+            key.juice = 1;
+            key.pressed = 1;
+        elseif keyCode(pauseKey)
+            key.pause = 1;
+            key.pressed = 1;
+        elseif keyCode(stopKey)
+            key.escape = 1;
+            key.pressed = 1;
+        end
+    end
+    
     % Makes a folder and file where data will be saved.
     function prepare_for_saving()
-        cd(charnovData);
+        cd(validData);
         
         % Check if cell ID was passed in with monkey's initial.
         if numel(monkeysInitial) == 1
@@ -316,14 +362,23 @@ function charnov(monkeysInitial, trialTotal)
         
         dateStr = datestr(now, 'yymmdd');
         filename = [initial dateStr '.' cell '1.C.mat'];
-        folderName = [initial dateStr];
+        folderNameDay = [initial dateStr];
+        folderNameBlock = ['Block' num2str(currBlock)];
         
-        % Make and enter a folder where .mat files will be saved.
-        if exist(folderName, 'dir') == 7
-            cd(folderName);
+        % Make and/or enter a folder where trial block folders are located.
+        if exist(folderNameDay, 'dir') == 7
+            cd(folderNameDay);
         else
-            mkdir(folderName);
-            cd(folderName);
+            mkdir(folderNameDay);
+            cd(folderNameDay);
+        end
+        
+        % Make and/or enter a folder where .mat files will be saved.
+        if exist(folderNameBlock, 'dir') == 7
+            cd(folderNameBlock);
+        else
+            mkdir(folderNameBlock);
+            cd(folderNameBlock);
         end
         
         % Make sure the filename for the .mat file is not already used.

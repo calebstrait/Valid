@@ -1,6 +1,10 @@
+% ---------------------------------------------- %
+% -- Aaron's modified version for valid. task -- %
+% ---------------------------------------------- %
+
 %CES 3/28/2011
 
-function StagOpsFinal(initcell)
+function StagOpsFinal(initcell, trialTotal, currBlock)
 
 % Variables that can/should be changed according to task
 eye = 2; %2 for right, 1 for left
@@ -29,7 +33,7 @@ global height; height = 300; %Height of rects
 fixbox = 5; % Thickness of rect fixation cue
 windheight = 175; %Height of fixation window
 windwidth = 175; %Width of fixation window
-dispwind = 1; %Show fixation window
+dispwind = 0; %Show fixation window
 chanceHuge = 0.5; %Chance of huge reward trial
 chanceSafe = 0.125; %Chance of safe trial
 
@@ -42,35 +46,10 @@ backcolor = [50 50 50]; %Background color
 maincolor = [255 255 0]; %Color of fixation dot
 feedbackcolor = [255 255 255]; %Color of feedback circle
 
-% Create data file*****************
-% initcell is subject initial and cell letter, e.g. 'GA' for George, cell A
-% if there is no cell just input the initial, e.g. 'G'
-cd /TestData/StagOps;
-dateS = datestr(now, 'yymmdd');
-initial = initcell(1);
-if(numel(initcell) == 1)
-    cell = '';
-else
-    cell = initcell(2);
-end
-filename = [initial dateS '.' cell '1.SO.mat'];
-foldername = [initial dateS];
-warning off all;
-try
-    mkdir(foldername)
-end
-warning on all;
-cd(foldername)
-trynum = 1;
-while(trynum ~= 0)
-    if(exist(filename)~=0)
-        trynum = trynum +1;
-        filename = [initial dateS '.' cell num2str(trynum) '.SO.mat'];
-    else
-        savename = [initial dateS '.' cell num2str(trynum) '.SO.mat'];
-        trynum = 0;
-    end
-end
+% Sets up everything needed for saving data.
+validData = '/TestData/Valid';
+prepare_for_saving;
+
 home
 
 % Setup Eyelink*****************
@@ -97,16 +76,16 @@ Eyelink('SendKeyButton',double('o'),0,10); % Send the keypress 'o' to put Eyelin
 Eyelink('SendKeyButton',double('o'),0,10);
 
 % Count trials for the whole day*****************
-cd ..;
-daystrials = 0;
-thesefiles = dir(foldername);
-cd(foldername);
-fileIndex = find(~[thesefiles.isdir]);
-for i = 1:length(fileIndex)
-    thisfile = thesefiles(fileIndex(i)).name;
-    thisdata = importdata(thisfile);
-    daystrials = daystrials + length(thisdata);
-end
+% cd ..;
+% daystrials = 0;
+% thesefiles = dir(foldername);
+% cd(foldername);
+% fileIndex = find(~[thesefiles.isdir]);
+% for i = 1:length(fileIndex)
+%     thisfile = thesefiles(fileIndex(i)).name;
+%     thisdata = importdata(thisfile);
+%     daystrials = daystrials + length(thisdata);
+% end
 
 % Ask to set up*****************
 Screen('FillRect', window, backcolor);
@@ -156,7 +135,6 @@ positions = 0;
 iti = noreciti;
 timeofchoice = GetSecs - (feedbacktime + iti);
 reactiontime = 0;
-savecommand = ['save ' savename ' data'];
 correct2 = 0;
 possible2 = 0;
 correct3 = 0;
@@ -170,7 +148,9 @@ ccount = -1;
 dcount = -1;
 starttime = GetSecs;
 
-while(continuing);
+% Also counts trials to determine when to end experiment.
+trialCount = 1;
+while(continuing && trialCount <= trialTotal);
     % Set Screen*****************
     if(step == 7)
         if(fixating == 1)
@@ -309,8 +289,11 @@ while(continuing);
         data(trial).rewardhuge = rewardhuge;
         data(trial).reactiontime = (reactiontime - timeofchoice);
         data(trial).positions = positions;
-        eval(savecommand);
+        eval(saveCommand);
         %disp(sprintf('Data send: %3.4fs', (GetSecs-ITIdatatime)));
+        
+        % Increment the trial number.
+        trialCount = trialCount + 1;
     end 
     onset = 0;
     
@@ -541,13 +524,14 @@ while(continuing);
         end
         
         %Print to command window
-        disp(' ');
-        home;
-        if(trial ~= (trial + daystrials))
-            disp(['Trial #' num2str(trial) '/' num2str(trial + daystrials)]);
-        else
-            disp(['Trial #' num2str(trial)]);
-        end
+%         disp(' ');
+%         home;
+%         if(trial ~= (trial + daystrials))
+%             disp(['Trial #' num2str(trial) '/' num2str(trial + daystrials)]);
+%         else
+%             disp(['Trial #' num2str(trial)]);
+%         end
+        
         elapsed = GetSecs-starttime;
         disp(sprintf('Elapsed time: %.0fh %.0fm', floor(elapsed/3600), floor((elapsed-(floor(elapsed/3600)*3600))/60)));
         if(numOps == 3)
@@ -654,6 +638,55 @@ end
 Eyelink('stoprecording');
 sca;
 %keyboard
+
+% Makes a folder and file where data will be saved.
+function prepare_for_saving()
+    cd(validData);
+
+    % Check if cell ID was passed in with monkey's initial.
+    if numel(initcell) == 1
+        initial = initcell;
+        cell = '';
+    else
+        initial = initcell(1);
+        cell = initcell(2);
+    end
+
+    dateStr = datestr(now, 'yymmdd');
+    filename = [initial dateStr '.' cell '1.SO.mat'];
+    folderNameDay = [initial dateStr];
+    folderNameBlock = ['Block' num2str(currBlock)];
+    varName = 'data';   
+
+    % Make and/or enter a folder where trial block folders are located.
+    if exist(folderNameDay, 'dir') == 7
+        cd(folderNameDay);
+    else
+        mkdir(folderNameDay);
+        cd(folderNameDay);
+    end
+
+    % Make and/or enter a folder where .mat files will be saved.
+    if exist(folderNameBlock, 'dir') == 7
+        cd(folderNameBlock);
+    else
+        mkdir(folderNameBlock);
+        cd(folderNameBlock);
+    end
+
+    % Make sure the filename for the .mat file is not already used.
+    fileNum = 1;
+    while fileNum ~= 0
+        if exist(filename, 'file') == 2
+            fileNum = fileNum + 1;
+            filename = [initial dateStr '.' cell num2str(fileNum) '.SO.mat'];
+        else
+            fileNum = 0;
+        end
+    end
+
+    saveCommand = ['save ' filename ' ' varName];
+end
 end
 
 function f = createGamble(pcentNotRed, xmin, xmax, ymin, ymax, isHuge, isSafe)

@@ -2,7 +2,7 @@
 % -- Aaron's modified version for valid. task -- %
 % ---------------------------------------------- %
 
-function DietSelection(initcell, trialTotal)
+function DietSelection(initcell, trialTotal, currBlock)
     
 yStart  = 200;
 yEnd    = 500;
@@ -20,32 +20,10 @@ gamble2Prob = 0;
 forcedRewProb = 0;
 forcedFixProb = 0;
 
-cd /TestData/Diet;
-%Make the data folder for this date, make a file name
-dateS = datestr(now, 'yymmdd');
-initial = initcell(1);
-if(numel(initcell) == 1)    cell = '';
-else                        cell = initcell(2); end
-filename = [initial dateS '.' cell '1.DS.mat'];
-foldername = [initial dateS];
-warning off all;
-try
-    mkdir(foldername)
-end
-warning on all;
-cd(foldername)
-trynum = 1;
+% Sets up everything needed for saving data.
+validData = '/TestData/Valid';
+prepare_for_saving;
 
-while(trynum ~= 0)
-    if(exist(filename)~=0)
-        trynum = trynum +1;
-        filename = [initial dateS '.' cell num2str(trynum) '.DS.mat'];
-    else
-        savename = [initial dateS '.' cell num2str(trynum) '.DS.mat'];
-        trynum = 0;
-    end
-end
-saveCommand = ['save ' savename ' data'];
 warning('off', 'MATLAB:warn_r14_stucture_assignment');
 
 %Eyelink setup
@@ -119,6 +97,55 @@ while(k.escape ~= 1 && trialCount <= trialTotal)
     Screen(window,'flip');
 end
 sca
+
+% Makes a folder and file where data will be saved.
+function prepare_for_saving()
+    cd(validData);
+
+    % Check if cell ID was passed in with monkey's initial.
+    if numel(initcell) == 1
+        initial = initcell;
+        cell = '';
+    else
+        initial = initcell(1);
+        cell = initcell(2);
+    end
+
+    dateStr = datestr(now, 'yymmdd');
+    filename = [initial dateStr '.' cell '1.DS.mat'];
+    folderNameDay = [initial dateStr];
+    folderNameBlock = ['Block' num2str(currBlock)];
+    varName = 'data';   
+
+    % Make and/or enter a folder where trial block folders are located.
+    if exist(folderNameDay, 'dir') == 7
+        cd(folderNameDay);
+    else
+        mkdir(folderNameDay);
+        cd(folderNameDay);
+    end
+
+    % Make and/or enter a folder where .mat files will be saved.
+    if exist(folderNameBlock, 'dir') == 7
+        cd(folderNameBlock);
+    else
+        mkdir(folderNameBlock);
+        cd(folderNameBlock);
+    end
+
+    % Make sure the filename for the .mat file is not already used.
+    fileNum = 1;
+    while fileNum ~= 0
+        if exist(filename, 'file') == 2
+            fileNum = fileNum + 1;
+            filename = [initial dateStr '.' cell num2str(fileNum) '.DS.mat'];
+        else
+            fileNum = 0;
+        end
+    end
+
+    saveCommand = ['save ' filename ' ' varName];
+end
 end
 
 function k = pause(k)
