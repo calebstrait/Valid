@@ -96,22 +96,23 @@ Eyelink('SendKeyButton',double('o'),0,10);
 Screen('FillRect', window, backcolor);
 Screen(window,'flip');
 continuing = 1;
-go = 0;
-disp('Right Arrow to start');
-gokey=KbName('RightArrow');
-nokey=KbName('ESCAPE');
-while((go == 0) && (continuing == 1))
-    [keyIsDown,secs,keyCode] = KbCheck;
-    if keyCode(gokey)
-        go = 1;
-    elseif keyCode(nokey)
-        continuing = 0;
-    end
-end
-while keyIsDown
-    [keyIsDown,secs,keyCode] = KbCheck;
-end
-home
+
+% go = 0;
+% disp('Right Arrow to start');
+% gokey=KbName('RightArrow');
+% nokey=KbName('ESCAPE');
+% while((go == 0) && (continuing == 1))
+%     [keyIsDown,secs,keyCode] = KbCheck;
+%     if keyCode(gokey)
+%         go = 1;
+%     elseif keyCode(nokey)
+%         continuing = 0;
+%     end
+% end
+% while keyIsDown
+%     [keyIsDown,secs,keyCode] = KbCheck;
+% end
+% home
 
 % Set variables*****************
 targX = 512;

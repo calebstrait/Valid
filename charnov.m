@@ -57,8 +57,8 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     varName         = 'data';             % Name of the var to save in the workspace.
     
     % Shrinking.
-    shrinkRate      = 65;             % Bar shrink rate.
-    shrinkInterval  = 1;              % Shrink speed interval.
+    shrinkRate      = 1.625;          % Bar shrink rate (pixels shrunk in 200 ms).
+    shrinkInterval  = 0.025;          % Shrink speed interval.
     
     % Stimuli.
     barToFixDist    = 300;            % Distance from fixation center to bar edge.
@@ -638,7 +638,7 @@ function charnov(monkeysInitial, trialTotal, currBlock)
             % Check for pressed keys.
             keyPress = key_check;
             key_execute(keyPress);
-        
+            
             % Wait for a second to allow for 65 pixel/s shrink rate.
             pause(shrinkInterval);
             
@@ -674,7 +674,7 @@ function charnov(monkeysInitial, trialTotal, currBlock)
             % Check for pressed keys.
             keyPress = key_check;
             key_execute(keyPress);
-        
+            
             % Wait for a second to allow for 65 pixel/s shrink rate.
             pause(shrinkInterval);
             
@@ -694,17 +694,17 @@ function charnov(monkeysInitial, trialTotal, currBlock)
                
                return;
             else
-                newYMin = lBYMin + (shrinkRate / 2);
-                newYMax = lBYMax - (shrinkRate / 2);
+                newYMin = sBYMin + (shrinkRate / 2);
+                newYMax = sBYMax - (shrinkRate / 2);
                 
                 % Redraw both bars with one smaller to shrink.
-                draw_bars(lBXMin, lBXMax, newYMin, newYMax, ...
-                          sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
+                draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
+                          sBXMin, sBXMax, newYMin, newYMax, false, 'both');
                 
                 % Recursive call.
-                shrunk = shrink_bar('leave', shrinkRate, newCurrHeight, ...
-                                    lBXMin, lBXMax, newYMin, newYMax, ...
-                                    sBXMin, sBXMax, sBYMin, sBYMax);
+                shrunk = shrink_bar('stay', shrinkRate, newCurrHeight, ...
+                                    lBXMin, lBXMax, lBYMin, lBYMax, ...
+                                    sBXMin, sBXMax, newYMin, newYMax);
             end
         else
             disp('Shrinking error');
