@@ -1,5 +1,9 @@
-function DietSelection( initcell )
+% ---------------------------------------------- %
+% -- Aaron's modified version for valid. task -- %
+% ---------------------------------------------- %
 
+function DietSelection(initcell, trialTotal)
+    
 yStart  = 200;
 yEnd    = 500;
 xLoc    = 512;
@@ -31,6 +35,7 @@ end
 warning on all;
 cd(foldername)
 trynum = 1;
+
 while(trynum ~= 0)
     if(exist(filename)~=0)
         trynum = trynum +1;
@@ -75,8 +80,11 @@ Screen(window,'flip');
 
 lane1 = Lane(xLoc, yStart, yEnd, window, speed, maxTime, minTime, saveCommand, probWorm, temptSwitch, gamble1Prob, gamble2Prob, forcedRewProb,forcedFixProb);
 wormTime = 0;
+
+% Also counts trials to determine when to end experiment.
+trialCount = 0;
 k = keyCheck;
-while(k.escape ~= 1)
+while(k.escape ~= 1 && trialCount <= trialTotal)
     k = keyCheck;
     if(k.juice == 1)
         reward(.2);
@@ -92,9 +100,13 @@ while(k.escape ~= 1)
             pause(k);
         end
         if(GetSecs - wormTime > freqWorm)
+            
             wormTime = GetSecs;
             if(rand < probWorm)
                 makeRandWorm(lane1, getSecs - searchTime);
+                
+                % Increment the trial number.
+                trialCount = trialCount + 1;
             end
         end
     end
