@@ -4,7 +4,10 @@
 
 %CES 3/28/2011
 
-function StagOpsFinal(initcell, trialTotal, currBlock)
+function StagOpsFinal(initcell, trialTotal, currBlock, passedWindow)
+
+global window;
+window = passedWindow;
 
 % Variables that can/should be changed according to task
 eye = 2; %2 for right, 1 for left
@@ -54,9 +57,10 @@ home
 
 % Setup Eyelink*****************
 %HideCursor; %This hides the Psychtoolbox startup Screen
-oldEnableFlag = Screen('Preference', 'VisualDebugLevel', 0);% warning('off','MATLAB:dispatcher:InexactCaseMatch')
-oldLevel = Screen('Preference', 'Verbosity', 0);%Hides PTB Warnings
-global window; window = Screen('OpenWindow', 1, 0);
+% oldEnableFlag = Screen('Preference', 'VisualDebugLevel', 0);% warning('off','MATLAB:dispatcher:InexactCaseMatch')
+% oldLevel = Screen('Preference', 'Verbosity', 0);%Hides PTB Warnings
+% global window; window = Screen('OpenWindow', 1, 0);
+
 if ~Eyelink('IsConnected')
     Eyelink('initialize');%connects to eyelink computer
 end
@@ -638,7 +642,7 @@ end
 %     hold off;
 % end
 Eyelink('stoprecording');
-sca;
+% sca;
 %keyboard
 
 % Makes a folder and file where data will be saved.
@@ -692,7 +696,7 @@ end
 end
 
 function f = createGamble(pcentNotRed, xmin, xmax, ymin, ymax, isHuge, isSafe)
-global hugecolor; global largecolor; global medcolor; global smallcolor; global window; global height;
+global hugecolor; global largecolor; global medcolor; global smallcolor; global height; global window;
 Screen('FillRect', window, smallcolor, [xmin ymin xmax ymax]);
 if(isHuge == 1)
     Screen('FillRect', window, hugecolor, [xmin ymin xmax (ymin + (pcentNotRed * height))]);

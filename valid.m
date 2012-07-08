@@ -20,13 +20,20 @@
 % 
 
 function valid(monkeysInitial, totalTrials)
-    taskDirectory = '/Users/bhayden/Documents/AaronMATLAB/randomfour';
-    taskTrialTotal = totalTrials;
-    totalTrialsRun = 0;
-    completedBlocks = 0;
-    currentBlock = 0;
-    running = true;
-    taskName = '';
+    colorBackground = [50 50 50];   % Background color of entire experiment screen.
+    completedBlocks = 0;            % How many blocks of tasks have been completed.
+    currentBlock    = 0;            % Block of four tasks currently being completed.
+    ITI             = 5;            % Pause time between every trial.
+    monkeyScreen    = 1;            % Number of the screen the monkey sees.
+    running         = true;         % Stores running state of entire task.
+    taskDirectory   = '/Users/bhayden/Documents/AaronMATLAB/randomfour';
+                                    % Directory where the tasks's program files are stored.
+    taskName        = '';           % Name of the current task being run.
+    taskTrialTotal  = totalTrials;  % Number of trials for each subtask to run.
+    totalTrialsRun  = 0;            % Total number of trials run for the session.
+    
+    % Get a window to display stimuli through all sessions.
+    window = setup_window;
     
     print_info;
     
@@ -34,7 +41,7 @@ function valid(monkeysInitial, totalTrials)
         % Check keys for commands.
         keyPress = key_check;
         key_execute(keyPress);
-                
+        
         currentBlock = currentBlock + 1;
         
         % Get a random order to present the following four tasks.
@@ -46,7 +53,7 @@ function valid(monkeysInitial, totalTrials)
             % Check keys for commands.
             keyPress = key_check;
             key_execute(keyPress);
-                
+            
             taskNum = order(taskCounter);
             taskCounter = taskCounter + 1;
             
@@ -58,7 +65,7 @@ function valid(monkeysInitial, totalTrials)
                 taskName = 'charnov';
                 print_task(taskName);
                 
-                charnov(monkeysInitial, taskTrialTotal, currentBlock);
+                charnov(monkeysInitial, taskTrialTotal, currentBlock, window);
                 
                 totalTrialsRun = totalTrialsRun + taskTrialTotal;
                 
@@ -70,7 +77,7 @@ function valid(monkeysInitial, totalTrials)
                 taskName = 'stagopsfinal';
                 print_task(taskName);
                 
-                stagopsfinal(monkeysInitial, taskTrialTotal, currentBlock);
+                stagopsfinal(monkeysInitial, taskTrialTotal, currentBlock, window);
                 
                 totalTrialsRun = totalTrialsRun + taskTrialTotal;
                 
@@ -82,7 +89,7 @@ function valid(monkeysInitial, totalTrials)
                 taskName = 'dietselection';
                 print_task(taskName);
                 
-                dietselection(monkeysInitial, taskTrialTotal, currentBlock);
+                dietselection(monkeysInitial, taskTrialTotal, currentBlock, window);
                 
                 totalTrialsRun = totalTrialsRun + taskTrialTotal;
                 
@@ -94,7 +101,7 @@ function valid(monkeysInitial, totalTrials)
                 taskName = 'fadeops';
                 print_task(taskName);
                 
-                fadeops(monkeysInitial, taskTrialTotal, currentBlock);
+                fadeops(monkeysInitial, taskTrialTotal, currentBlock, window);
                 
                 totalTrialsRun = totalTrialsRun + taskTrialTotal;
                 
@@ -110,6 +117,9 @@ function valid(monkeysInitial, totalTrials)
         print_stats(taskName);
     end
     
+    % Close the sceen since the experiment is done.
+    Screen('CloseAll');
+    
     % Checks to see what key was pressed.
     function key = key_check()
         % Assign key codes to some variables.
@@ -121,7 +131,7 @@ function valid(monkeysInitial, totalTrials)
         key.juice = false;
         
         % Get info about any key that was just pressed.
-        [keyIsDown, secs, keyCode] = KbCheck;
+        [~, ~, keyCode] = KbCheck;
         
         % Check pressed key against the keyCode array of 256 key codes.
         if keyCode(juiceKey)
@@ -136,6 +146,8 @@ function valid(monkeysInitial, totalTrials)
         % Stop task at end of current trial.
         if keyRef.escape == true
             running = false;
+            disp(oldEnableFlag);
+            disp(oldLevel);
         % Give an instance juice reward.
         elseif keyRef.juice == true
             reward(spaceReward);
@@ -159,7 +171,7 @@ function valid(monkeysInitial, totalTrials)
         disp('             ');
         disp('****************************************');
     end
-
+    
     % Prints current experiment stats.
     function print_stats(taskName)
         home;
@@ -177,7 +189,7 @@ function valid(monkeysInitial, totalTrials)
         disp('             ');
         disp('****************************************');
     end
-
+    
     % Prints next task to run.
     function print_task(taskName)
         disp('             ');
@@ -186,7 +198,19 @@ function valid(monkeysInitial, totalTrials)
         disp('             ');
         disp('             ');
         disp('****************************************');
-        pause(5);
-        home; 
+        pause(ITI);
+        home;
+    end
+    
+    % Sets up a new window and sets preferences for it.
+    function window = setup_window()
+        % Print only PTB errors.
+        Screen('Preference', 'VisualDebugLevel', 1);
+        
+        % Suppress the print out of all PTB warnings.
+        Screen('Preference', 'Verbosity', 0);
+        
+        % Setup a screen for displaying stimuli for this session.
+        window = Screen('OpenWindow', monkeyScreen, colorBackground);
     end
 end

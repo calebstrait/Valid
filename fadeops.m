@@ -4,7 +4,10 @@
 
 %CES 3/2/2011
 
-function FadeOps(initial, trialTotal, currBlock)
+function FadeOps(initial, trialTotal, currBlock, passedWindow)
+
+global window;
+window = passedWindow;
 
 %****** TASK
 task = 0;
@@ -59,9 +62,11 @@ home
 
 % Setup Eyelink*****************
 %HideCursor; %This hides the Psychtoolbox startup Screen
-oldEnableFlag = Screen('Preference', 'VisualDebugLevel', 0);% warning('off','MATLAB:dispatcher:InexactCaseMatch')
-oldLevel = Screen('Preference', 'Verbosity', 0);%Hides PTB Warnings
-global window; window = Screen('OpenWindow', 1, 0);
+
+% oldEnableFlag = Screen('Preference', 'VisualDebugLevel', 0);% warning('off','MATLAB:dispatcher:InexactCaseMatch')
+% oldLevel = Screen('Preference', 'Verbosity', 0);%Hides PTB Warnings
+% global window; window = Screen('OpenWindow', 1, 0);
+
 if ~Eyelink('IsConnected')
     Eyelink('initialize');%connects to eyelink computer
 end
@@ -447,7 +452,7 @@ end
 %     plot(pcent2graph);
 % end
 Eyelink('stoprecording');
-sca;
+% sca;
 %keyboard
 
 % Makes a folder and file where data will be saved.

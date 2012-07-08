@@ -19,7 +19,7 @@
 % THE SOFTWARE.
 % 
 
-function charnov(monkeysInitial, trialTotal, currBlock)
+function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     % ---------------------------------------------- %
     % -------------- Global variables -------------- %
     % ---------------------------------------------- %
@@ -40,7 +40,6 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     fixBoundYMin    = centerY - 88;   % Mix y distance from fixation point to fixate.
     
     % References.
-    monkeyScreen    = 1;              % Number of the screen the monkey sees.
     trackedEye      = 2;              % Eyelink code for which eye is being tracked.
     window          = NaN;            % Reference to window used for drawing.
     
@@ -96,11 +95,10 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     % ------------------- Setup -------------------- %
     % ---------------------------------------------- %
     
+    window = passedWindow;
+    
     % Saving.
     prepare_for_saving;
-    
-    % Screen.
-    window = Screen('OpenWindow', monkeyScreen, colorBackground);
     
     % Eyelink.
     setup_eyelink;
@@ -121,6 +119,8 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         trialCount = trialCount + 1;
         print_stats();
     end
+    
+    Eyelink('Stoprecording');
     
     % ---------------------------------------------- %
     % ----------------- Functions ------------------ %
@@ -351,7 +351,7 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         key.juice = false;
         
         % Get info about any key that was just pressed.
-        [keyIsDown, secs, keyCode] = KbCheck;
+        [~, ~, keyCode] = KbCheck;
         
         % Check pressed key against the keyCode array of 256 key codes.
         if keyCode(juiceKey)
@@ -607,6 +607,9 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     
     % Sets up the Eyelink system.
     function setup_eyelink()
+        abortSetup = false;
+        setupMode = 2;
+        
         % Connect Eyelink to computer if unconnected.
         if ~Eyelink('IsConnected')
             Eyelink('Initialize');
@@ -620,6 +623,16 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         Eyelink('Command', 'force_manual_accept = YES');
         
         Eyelink('StartSetup');
+        
+        % Wait until Eyelink actually enters setup mode.
+        while ~abortSetup && Eyelink('CurrentMode') ~= setupMode
+            [keyIsDown, ~, keyCode] = KbCheck;
+            
+            if keyIsDown && keyCode(KbName('ESCAPE'))
+                abortSetup = true;
+                disp('Aborted while waiting for Eyelink!');
+            end
+        end
         
         % Put Eyelink in output mode.
         Eyelink('SendKeyButton', double('o'), 0, 10);

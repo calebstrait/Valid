@@ -2,8 +2,11 @@
 % -- Aaron's modified version for valid. task -- %
 % ---------------------------------------------- %
 
-function DietSelection(initcell, trialTotal, currBlock)
-    
+function DietSelection(initcell, trialTotal, currBlock, passedWindow)
+
+global window;
+window = passedWindow;
+
 yStart  = 200;
 yEnd    = 500;
 xLoc    = 512;
@@ -47,10 +50,11 @@ Eyelink('SendKeyButton',double('o'),0,10);
 Eyelink('SendKeyButton',double('o'),0,10); %A second time to start recording
 
 backcolour       = [50,   50,  50];
-oldEnableFlag = Screen('Preference', 'VisualDebugLevel', 0);% warning('off','MATLAB:dispatcher:InexactCaseMatch')
-oldLevel = Screen('Preference', 'Verbosity', 0);%Hides PTB Warnings
-window = Screen('OpenWindow', 1, 0);
-Screen('FillRect', window, backcolour);
+% oldEnableFlag = Screen('Preference', 'VisualDebugLevel', 0);% warning('off','MATLAB:dispatcher:InexactCaseMatch')
+% oldLevel = Screen('Preference', 'Verbosity', 0);%Hides PTB Warnings
+% window = Screen('OpenWindow', 1, 0);
+% Screen('FillRect', window, backcolour);
+
 [xMax, yMax] = Screen('WindowSize', window);
 Screen('FillRect', window, offstage, [0 0 xMax yStart - 40])
 Screen('FillRect', window, offstage, [0 (yEnd + 40) xMax yMax])
@@ -96,7 +100,10 @@ while(k.escape ~= 1 && trialCount <= trialTotal)
     end
     Screen(window,'flip');
 end
-sca
+
+% sca
+
+Eyelink('Stoprecording');
 
 % Makes a folder and file where data will be saved.
 function prepare_for_saving()
