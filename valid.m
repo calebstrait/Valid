@@ -23,7 +23,7 @@ function valid(monkeysInitial, totalTrials)
     colorBackground = [50 50 50];   % Background color of entire experiment screen.
     completedBlocks = 0;            % How many blocks of tasks have been completed.
     currentBlock    = 0;            % Block of four tasks currently being completed.
-    ITI             = 5;            % Pause time between every trial.
+    ITTI            = 1;            % Pause time between every trial type.
     monkeyScreen    = 1;            % Number of the screen the monkey sees.
     running         = true;         % Stores running state of entire task.
     taskDirectory   = '/Users/bhayden/Documents/AaronMATLAB/randomfour';
@@ -146,8 +146,6 @@ function valid(monkeysInitial, totalTrials)
         % Stop task at end of current trial.
         if keyRef.escape == true
             running = false;
-            disp(oldEnableFlag);
-            disp(oldLevel);
         % Give an instance juice reward.
         elseif keyRef.juice == true
             reward(spaceReward);
@@ -198,7 +196,7 @@ function valid(monkeysInitial, totalTrials)
         disp('             ');
         disp('             ');
         disp('****************************************');
-        pause(ITI);
+        pause(ITTI);
         home;
     end
     

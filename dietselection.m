@@ -66,7 +66,7 @@ wormTime = 0;
 % Also counts trials to determine when to end experiment.
 trialCount = 0;
 k = keyCheck;
-while(k.escape ~= 1 && trialCount <= trialTotal)
+while(k.escape ~= 1)
     k = keyCheck;
     if(k.juice == 1)
         reward(.2);
@@ -74,7 +74,13 @@ while(k.escape ~= 1 && trialCount <= trialTotal)
     wormTime = getSecs;
     searchTime = getSecs;
     while(lane1.currentWorms == 0 && lane1.currentTempter == 0 && k.escape ~= 1)
-        k = keyCheck;
+        % Hack to make sure this trial run stops after it runs totalTrial times.
+        if trialCount == trialTotal
+            k.escape = 1;
+        else
+            k = keyCheck;
+        end
+        
         if(k.juice == 1)
             reward(.2);
         end
@@ -82,13 +88,12 @@ while(k.escape ~= 1 && trialCount <= trialTotal)
             pause(k);
         end
         if(GetSecs - wormTime > freqWorm)
-            
             wormTime = GetSecs;
             if(rand < probWorm)
-                makeRandWorm(lane1, getSecs - searchTime);
-                
                 % Increment the trial number.
                 trialCount = trialCount + 1;
+                
+                makeRandWorm(lane1, getSecs - searchTime);
             end
         end
     end
@@ -174,26 +179,26 @@ disp('Unpaused')
 end
 
 function key = keyCheck
-stopkey=KbName('ESCAPE');
-juicekey=KbName('space');
-pausekey=KbName('RightControl');
-key.pressed = 0;
-key.escape = 0;
-key.juice = 0;
-key.pause = 0;
-[keyIsDown,secs,keyCode] = KbCheck;
-if keyCode(stopkey)
-    key.escape = 1;
-    key.pressed = 1;
-end
-if keyCode(juicekey)
-    key.juice = 1;
-    key.pressed = 1;
-end
-if keyCode(pausekey)
-    key.pause = 1;
-    key.pressed = 1;
-end
+    stopkey=KbName('ESCAPE');
+    juicekey=KbName('space');
+    pausekey=KbName('RightControl');
+    key.pressed = 0;
+    key.escape = 0;
+    key.juice = 0;
+    key.pause = 0;
+    [keyIsDown,secs,keyCode] = KbCheck;
+    if keyCode(stopkey)
+        key.escape = 1;
+        key.pressed = 1;
+    end
+    if keyCode(juicekey)
+        key.juice = 1;
+        key.pressed = 1;
+    end
+    if keyCode(pausekey)
+        key.pause = 1;
+        key.pressed = 1;
+    end
 end
 
 function reward(rewardduration)
