@@ -192,33 +192,52 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                     yCoord >= yBoundMin && yCoord <= yBoundMax) || ...
                    (xCoord >= xBoundMin2nd && xCoord <= xBoundMax2nd && ...
                     yCoord >= yBoundMin2nd && yCoord <= yBoundMax2nd)
-                    % Determine which boundary the eye entered.
+                    % Determine if the eye entered the leave option boundaries.
                     if xCoord >= xBoundMin && xCoord <= xBoundMax && ...
                        yCoord >= yBoundMin && yCoord <= yBoundMax
+                        % Notify plexon: Eye looked at leave option.
+                        toplexon(4081);
+                        
                         % Determine if eye maintained fixation for given duration.
                         checkFixBreak = fix_break_check(xBoundMin, xBoundMax, ...
                                                         yBoundMin, yBoundMax, ...
                                                         duration);
                         
                         if checkFixBreak == false
+                            % Notify plexon: Eye acquired fixtion on leave option.
+                            toplexon(4083);
+                            
                             % Fixation was obtained for desired duration.
                             fixation = true;
                             area = 'first';
                             
                             return;
+                        else
+                            % Notify plexon: Eye looked away from leave option.
+                            toplexon(4082);
                         end
+                    % Determine if the eye entered the stay option boundaries.
                     else
+                        % Notify plexon: Eye looked at stay option.
+                        toplexon(4071);
+                        
                         % Determine if eye maintained fixation for given duration.
                         checkFixBreak = fix_break_check(xBoundMin2nd, xBoundMax2nd, ...
                                                         yBoundMin2nd, yBoundMax2nd, ...
                                                         duration);
                         
                         if checkFixBreak == false
+                            % Notify plexon: Eye acquired fixtion on stay option.
+                            toplexon(4073);
+                            
                             % Fixation was obtained for desired duration.
                             fixation = true;
                             area = 'second';
                             
                             return;
+                        else
+                            % Notify plexon: Eye looked away from stay option.
+                            toplexon(4072);
                         end
                     end
                 end
@@ -226,17 +245,26 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 % Determine if eye is within the fixation boundary.
                 if xCoord >= xBoundMin && xCoord <= xBoundMax && ...
                    yCoord >= yBoundMin && yCoord <= yBoundMax
+                    % Notify plexon: Eye looked at fixation dot.
+                    toplexon(4051);
+                    
                     % Determine if eye maintained fixation for given duration.
                     checkFixBreak = fix_break_check(xBoundMin, xBoundMax, ...
                                                     yBoundMin, yBoundMax, ...
                                                     duration);
                     
                     if checkFixBreak == false
+                        % Notify plexon: Eye acquired fixation on fixation dot.
+                        toplexon(4053);
+                        
                         % Fixation was obtained for desired duration.
                         fixation = true;
                         area = 'single';
                         
                         return;
+                    else
+                        % Notify plexon: Eye looked away from fixation dot.
+                        toplexon(4052);
                     end
                 end
             end
@@ -290,16 +318,30 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     end
     
     % Displays the error state on the screen.
-    function error_state()
+    function error_state(errorType)               
         % Check for pressed keys.
         keyPress = key_check;
         key_execute(keyPress);
         
+        % Determine what type of error occured.
+        plexonCode = 0;
+        if strcmp(errorType, 'noInitiate') == 1
+            plexonCode = 4007;
+        elseif strcmp(errorType, 'noHold') == 1
+            plexonCode = 4008;
+        elseif strcmp(errorType, 'noChoice') == 1
+            plexonCode = 4009;
+        end
+        
+        % Display error screen.
         Screen('FillRect', window, colorError, [(centerX - errorSquare) ...
                                                 (centerY - errorSquare) ...
                                                 (centerX + errorSquare) ...
                                                 (centerY + errorSquare)]);
         Screen('Flip', window);
+        
+        % Notify plexon: Error state presented.
+        toplexon(plexonCode);
         
         pause(errorStateTime);
     end
@@ -463,7 +505,11 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
         keyPress = key_check;
         key_execute(keyPress);
         
+        % Fixation dot appears.
         draw_fixation_point(colorFixDot);
+        
+        % Notify plexon: Fixation dot appeared.
+        toplexon(4001);
         
         fixating = check_fixation(fixBoundXMin, fixBoundXMax, ...
                                   fixBoundYMin, fixBoundYMax, ...
@@ -483,15 +529,21 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
             draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
                       sBXMin, sBXMax, sBYMin, sBYMax, true, 'both');
             
-            % Determine if eye maintained fixation for given duration.
+            % Notify plexon: Options appeared.
+            toplexon(4002);
+            
+            % Determine if eye maintained hold fixation for given duration.
             checkFixBreak = fix_break_check(fixBoundXMin, fixBoundXMax, ...
                                             fixBoundYMin, fixBoundYMax, ...
                                             holdFixTime);
             
             % Enter error state if fixation lost, otherwise continue trial.
             if checkFixBreak
-                % Monkey didn't hold fixation before making a choice.
-                error_state;
+                % Notify plexon: Eye looked away from hold fixation dot.
+                toplexon(4061);
+            
+                % Monkey did not hold fixation before making a choice.
+                error_state('noHold');
 
                 % Redo this trial since monkey failed it.
                 run_single_trial;
@@ -501,6 +553,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 % Redraw bars without fixation (remove fixation point).
                 draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
                           sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
+                
+                % Notify plexon: Hold dot disappeared.
+                toplexon(4003);
             end
             % Check for pressed keys.
             keyPress = key_check;
@@ -526,6 +581,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                     if shrunk
                         % Hacky way of smoothly presenting a blank screen.
                         draw_fixation_point(colorBackground);
+                        
+                        % Notify plexon: Unchosen option removed.
+                        toplexon(4006);
                         
                         % Reset juice reward amount.
                         currJuice = juiceMax;
@@ -561,6 +619,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                         % Hacky way of smoothly presenting a blank screen.
                         draw_fixation_point(colorBackground);
                         
+                        % Notify plexon: Unchosen option removed.
+                        toplexon(4006);
+                        
                         % Reduce the reward level for the next time.
                         currJuice = currJuice - juiceUnit;
                         
@@ -583,14 +644,14 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 end
             else
                 % Monkey never made a choice.
-                error_state;
+                error_state('noChoice');
                 
                 % Redo this trial since monkey failed it.
                 run_single_trial;
             end
         else
             % Monkey never fixated to initiate trial.
-            error_state;
+            error_state('noInitiate');
             
             % Redo this trial since monkey failed it.
             run_single_trial;
@@ -668,6 +729,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 % Bar is completely shrunk.
                 shrunk = true;
                 
+                % Notify plexon: Bar is completely shrunk.
+                toplexon(4005);
+               
                 return;
             else
                 newYMin = lBYMin + (shrinkRate / 2);
@@ -677,6 +741,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 draw_bars(lBXMin, lBXMax, newYMin, newYMax, ...
                           sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
                 
+                % Notify plexon: Bar is shrinking.
+                toplexon(4004);
+        
                 % Recursive call.
                 shrunk = shrink_bar('leave', shrinkRate, newCurrHeight, ...
                                     lBXMin, lBXMax, newYMin, newYMax, ...
@@ -704,6 +771,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                % Bar is completely shrunk.
                shrunk = true;
                
+               % Notify plexon: Bar is completely shrunk.
+               toplexon(4005);
+               
                return;
             else
                 newYMin = sBYMin + (shrinkRate / 2);
@@ -712,6 +782,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 % Redraw both bars with one smaller to shrink.
                 draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
                           sBXMin, sBXMax, newYMin, newYMax, false, 'both');
+                
+                % Notify plexon: Bar is shrinking.
+                toplexon(4004);
                 
                 % Recursive call.
                 shrunk = shrink_bar('stay', shrinkRate, newCurrHeight, ...
