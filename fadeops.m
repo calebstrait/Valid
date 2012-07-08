@@ -443,9 +443,9 @@ while(continuing && trialCount <= trialTotal)
         trialCount = trialCount + 1;
     end
 end
-if(length(pcent2graph) > 1)
-    plot(pcent2graph);
-end
+% if(length(pcent2graph) > 1)
+%     plot(pcent2graph);
+% end
 Eyelink('stoprecording');
 sca;
 %keyboard

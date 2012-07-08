@@ -19,12 +19,16 @@
 % THE SOFTWARE.
 % 
 
-function valid(monkeysInitial)
+function valid(monkeysInitial, totalTrials)
     taskDirectory = '/Users/bhayden/Documents/AaronMATLAB/randomfour';
-    taskTrialTotal = 100;
+    taskTrialTotal = totalTrials;
+    totalTrialsRun = 0;
     completedBlocks = 0;
     currentBlock = 0;
     running = true;
+    taskName = '';
+    
+    print_info;
     
     while running
         % Check keys for commands.
@@ -51,47 +55,70 @@ function valid(monkeysInitial)
             
             % Run the charnov task.
             if taskNum == 1
+                taskName = 'charnov';
+                print_task(taskName);
+                
                 charnov(monkeysInitial, taskTrialTotal, currentBlock);
+                
+                totalTrialsRun = totalTrialsRun + taskTrialTotal;
                 
                 % Check keys for commands.
                 keyPress = key_check;
                 key_execute(keyPress);
             % Run the stagopsfinal task.
             elseif taskNum == 2
+                taskName = 'stagopsfinal';
+                print_task(taskName);
+                
                 stagopsfinal(monkeysInitial, taskTrialTotal, currentBlock);
+                
+                totalTrialsRun = totalTrialsRun + taskTrialTotal;
                 
                 % Check keys for commands.
                 keyPress = key_check;
                 key_execute(keyPress);
             % Run the dietselection task.
             elseif taskNum == 3
+                taskName = 'dietselection';
+                print_task(taskName);
+                
                 dietselection(monkeysInitial, taskTrialTotal, currentBlock);
+                
+                totalTrialsRun = totalTrialsRun + taskTrialTotal;
                 
                 % Check keys for commands.
                 keyPress = key_check;
                 key_execute(keyPress);
             % Run the fadeops task.
             elseif taskNum == 4
+                taskName = 'fadeops';
+                print_task(taskName);
+                
                 fadeops(monkeysInitial, taskTrialTotal, currentBlock);
+                
+                totalTrialsRun = totalTrialsRun + taskTrialTotal;
                 
                 % Check keys for commands.
                 keyPress = key_check;
                 key_execute(keyPress);
             end
+            
+            print_stats(taskName);
         end
         
         completedBlocks = completedBlocks + 1;
+        print_stats(taskName);
     end
     
     % Checks to see what key was pressed.
     function key = key_check()
         % Assign key codes to some variables.
         juiceKey = KbName('space');
-        stopKey  = KbName('ESCAPE');
+        stopKey = KbName('ESCAPE');
         
         % Make sure default values of key are false.
-        key.escape  = false;
-        key.juice   = false;
+        key.escape = false;
+        key.juice = false;
         
         % Get info about any key that was just pressed.
         [keyIsDown, secs, keyCode] = KbCheck;
@@ -113,5 +140,53 @@ function valid(monkeysInitial)
         elseif keyRef.juice == true
             reward(spaceReward);
         end
+    end
+    
+    % Prints what tasks are going to be run and how many times each.
+    function print_info()
+        home;
+        disp('             ');
+        disp('****************************************');
+        disp('             ');
+        disp('Going to run:');
+        disp('    - stagopsfinal');
+        disp('    - fadops');
+        disp('    - dietselection');
+        disp('    - charnov');
+        disp('             ');
+        fprintf('Trials per task:% 4u', taskTrialTotal);
+        disp('             ');
+        disp('             ');
+        disp('****************************************');
+    end
+
+    % Prints current experiment stats.
+    function print_stats(taskName)
+        home;
+        disp('             ');
+        disp('****************************************');
+        disp('             ');
+        fprintf('Just ran:% 14s', taskName);
+        disp('             ');
+        disp('             ');
+        fprintf('Trials completed:% 4u', totalTrialsRun);
+        disp('             ');
+        disp('             ');
+        fprintf('Blocks completed:% 2u', completedBlocks);
+        disp('             ');
+        disp('             ');
+        disp('****************************************');
+    end
+
+    % Prints next task to run.
+    function print_task(taskName)
+        disp('             ');
+        disp('             ');
+        fprintf('Next task:% 14s', taskName);
+        disp('             ');
+        disp('             ');
+        disp('****************************************');
+        pause(5);
+        home; 
     end
 end

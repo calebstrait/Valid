@@ -631,12 +631,12 @@ while(continuing && trialCount <= trialTotal);
         onset = 1;
     end
 end
-if(length(pcent2graph) > 1 && length(pcent3graph) > 1)
-    hold on;
-    plot(pcent2graph);
-    plot(pcent3graph);
-    hold off;
-end
+% if(length(pcent2graph) > 1 && length(pcent3graph) > 1)
+%     hold on;
+%     plot(pcent2graph);
+%     plot(pcent3graph);
+%     hold off;
+% end
 Eyelink('stoprecording');
 sca;
 %keyboard

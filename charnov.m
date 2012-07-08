@@ -57,8 +57,8 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     varName         = 'data';             % Name of the var to save in the workspace.
     
     % Shrinking.
-    shrinkRate      = 1.625;          % Bar shrink rate (pixels shrunk in 200 ms).
-    shrinkInterval  = 0.025;          % Shrink speed interval.
+    shrinkRate      = 1.625;          % Pixels shrunk in 0.025 s (65 pixels/s)
+    shrinkInterval  = 0.025;          % Time to shrink 1.625 pixels.
     
     % Stimuli.
     barToFixDist    = 300;            % Distance from fixation center to bar edge.
@@ -84,7 +84,6 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     holdFixTime     = 0.5;            % Duration to hold fixation before choosing.
     ITI             = 1;              % Intertrial interval.
     minFixTime      = 0.2;            % Min time monkey must fixate to start trial.
-    pauseDelay      = 1;              % Unit of time that is used to pause the trial.
     timeToFix       = 30;             % Amount of time the monkey has to fixate.
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     
@@ -120,6 +119,7 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         run_single_trial;
         
         trialCount = trialCount + 1;
+        print_stats();
     end
     
     % ---------------------------------------------- %
@@ -183,10 +183,6 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         
         % Keep checking for fixation until timeout occurs.
         while timeout > (GetSecs - startTime)
-            % Check for pressed keys.
-            keyPress = key_check;
-            key_execute(keyPress);
-            
             [xCoord, yCoord] = get_eye_coords;
             
             % Determine if one or two locations are being tracked.
@@ -348,11 +344,11 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     function key = key_check()
         % Assign key codes to some variables.
         juiceKey = KbName('space');
-        stopKey  = KbName('ESCAPE');
+        stopKey = KbName('ESCAPE');
         
         % Make sure default values of key are false.
-        key.escape  = false;
-        key.juice   = false;
+        key.escape = false;
+        key.juice = false;
         
         % Get info about any key that was just pressed.
         [keyIsDown, secs, keyCode] = KbCheck;
@@ -422,6 +418,22 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         end
         
         saveCommand = ['save ' filename ' ' varName];
+    end
+    
+    % Prints current trial stats.
+    function print_stats()
+        home;
+        disp('             ');
+        disp('****************************************');
+        disp('             ');
+        fprintf('Trials completed:% 3u', trialCount);
+        disp('             ');
+        disp('             ');
+        disp('****************************************');
+        
+        if trialCount == trialTotal
+            pause(2);
+        end
     end
     
     % Rewards monkey using the juicer with the passed duration.
@@ -595,9 +607,6 @@ function charnov(monkeysInitial, trialTotal, currBlock)
     
     % Sets up the Eyelink system.
     function setup_eyelink()
-        abortFlag = false;
-        inSetupMode = 2;
-        
         % Connect Eyelink to computer if unconnected.
         if ~Eyelink('IsConnected')
             Eyelink('Initialize');
@@ -611,16 +620,6 @@ function charnov(monkeysInitial, trialTotal, currBlock)
         Eyelink('Command', 'force_manual_accept = YES');
         
         Eyelink('StartSetup');
-        
-        while ~abortFlag && Eyelink('CurrentMode') ~= inSetupMode
-            [keyIsDown, secs, keyCode] = KbCheck;
-            
-            % Let user abort Eyelink with the escape key.
-            if keyIsDown && keyCode(KbName('ESCAPE'))
-                disp('Aborted while waiting for Eyelink!');
-                abortFlag = true;
-            end
-        end
         
         % Put Eyelink in output mode.
         Eyelink('SendKeyButton', double('o'), 0, 10);
