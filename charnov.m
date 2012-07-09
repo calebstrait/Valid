@@ -41,22 +41,25 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     
     % References.
     trackedEye      = 2;              % Eyelink code for which eye is being tracked.
-    window          = NaN;            % Reference to window used for drawing.
+    window          = passedWindow;   % Reference to window used for drawing.
     
     % Reward.
-    currJuice       = 1.6;            % Current reward amount in microliters.
+    currJuice       = 1.6;            % Current reward amount in milliliters.
     juiceMax        = 1.6;            % Max amount of juice monkey can get.
     juiceUnit       = 0.1;            % Amount reward is reduced by for each stay trial.
     pourTimeOneMl   = 0.3;            % Number of secs juicer needs to pour 1 mL.
+    rewarded        = '';             % Wether or not the monkey got a reward.
+    rewardSize      = 0;              % How man milliliters of juice the monkey got.
     spaceReward     = 0.2;            % Reward given to monkey when spacebar pressed.
     
     % Saving.
+    saveCommand     = NaN;                % Command string that will save .mat files.         
     validData       = '/TestData/Valid';  % Directory where .mat files are saved.
-    saveCommand     = NaN;                % Command string that will save .mat files.
     varName         = 'data';             % Name of the var to save in the workspace.
     
     % Shrinking.
-    shrinkRate      = 1.625;          % Pixels shrunk in 0.025 s (65 pixels/s)
+    shrinkRate      = 1.625;          % Pixels shrunk in 0.025 s (65 pixels/s).
+    shrinkRateSec   = 65;             % Pixels shrunk in 1 s.
     shrinkInterval  = 0.025;          % Time to shrink 1.625 pixels.
     
     % Stimuli.
@@ -83,19 +86,20 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     holdFixTime     = 0.5;            % Duration to hold fixation before choosing.
     ITI             = 1;              % Intertrial interval.
     minFixTime      = 0.2;            % Min time monkey must fixate to start trial.
-    timeToFix       = 30;             % Amount of time the monkey has to fixate.
+    timeToFix       = 5;             % Amount of time the monkey has to fixate.
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     
     % Trial.
+    choiceMade      = '';             % Which option the monkey chose.
     currTrial       = 1;              % Current trial.
     newLBarHeight   = true;           % Whether or not new stay bar height is needed.
-    trialType       = 1;              % Current trial. Determines bar placement.
+    startLBarHeight = 0;              % The leave bar height for the current trial.
+    trialErrors     = struct([]);     % Stores the errors made during the trial.
+    trialType       = 0;              % Current trial. Determines bar placement.
     
     % ---------------------------------------------- %
     % ------------------- Setup -------------------- %
     % ---------------------------------------------- %
-    
-    window = passedWindow;
     
     % Saving.
     prepare_for_saving;
@@ -195,7 +199,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                     % Determine if the eye entered the leave option boundaries.
                     if xCoord >= xBoundMin && xCoord <= xBoundMax && ...
                        yCoord >= yBoundMin && yCoord <= yBoundMax
-                        % Notify plexon: Eye looked at leave option.
+                        % Notify Plexon: Eye looked at leave option.
                         toplexon(4081);
                         
                         % Determine if eye maintained fixation for given duration.
@@ -204,7 +208,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                                                         duration);
                         
                         if checkFixBreak == false
-                            % Notify plexon: Eye acquired fixtion on leave option.
+                            % Notify Plexon: Eye acquired fixtion on leave option.
                             toplexon(4083);
                             
                             % Fixation was obtained for desired duration.
@@ -213,12 +217,12 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                             
                             return;
                         else
-                            % Notify plexon: Eye looked away from leave option.
+                            % Notify Plexon: Eye looked away from leave option.
                             toplexon(4082);
                         end
                     % Determine if the eye entered the stay option boundaries.
                     else
-                        % Notify plexon: Eye looked at stay option.
+                        % Notify Plexon: Eye looked at stay option.
                         toplexon(4071);
                         
                         % Determine if eye maintained fixation for given duration.
@@ -227,7 +231,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                                                         duration);
                         
                         if checkFixBreak == false
-                            % Notify plexon: Eye acquired fixtion on stay option.
+                            % Notify Plexon: Eye acquired fixtion on stay option.
                             toplexon(4073);
                             
                             % Fixation was obtained for desired duration.
@@ -236,7 +240,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                             
                             return;
                         else
-                            % Notify plexon: Eye looked away from stay option.
+                            % Notify Plexon: Eye looked away from stay option.
                             toplexon(4072);
                         end
                     end
@@ -245,7 +249,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 % Determine if eye is within the fixation boundary.
                 if xCoord >= xBoundMin && xCoord <= xBoundMax && ...
                    yCoord >= yBoundMin && yCoord <= yBoundMax
-                    % Notify plexon: Eye looked at fixation dot.
+                    % Notify Plexon: Eye looked at fixation dot.
                     toplexon(4051);
                     
                     % Determine if eye maintained fixation for given duration.
@@ -254,7 +258,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                                                     duration);
                     
                     if checkFixBreak == false
-                        % Notify plexon: Eye acquired fixation on fixation dot.
+                        % Notify Plexon: Eye acquired fixation on fixation dot.
                         toplexon(4053);
                         
                         % Fixation was obtained for desired duration.
@@ -263,7 +267,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                         
                         return;
                     else
-                        % Notify plexon: Eye looked away from fixation dot.
+                        % Notify Plexon: Eye looked away from fixation dot.
                         toplexon(4052);
                     end
                 end
@@ -323,14 +327,40 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
         keyPress = key_check;
         key_execute(keyPress);
         
+        % Set variables that will help with storing the error type.
+        numErrors = length(trialErrors);
+        errorName = strcat('error', num2str(numErrors + 1));
+        
         % Determine what type of error occured.
         plexonCode = 0;
+        
         if strcmp(errorType, 'noInitiate') == 1
             plexonCode = 4007;
+            
+            % Store the error in a struct.
+            if isempty(trialErrors)
+                trialErrors(1).error1 = errorType;
+            else
+                trialErrors.(errorName) = errorType;
+            end
         elseif strcmp(errorType, 'noHold') == 1
             plexonCode = 4008;
+            
+            % Store the error in a struct.
+            if isempty(trialErrors)
+                trialErrors(1).error1 = errorType;
+            else
+                trialErrors.(errorName) = errorType;
+            end
         elseif strcmp(errorType, 'noChoice') == 1
             plexonCode = 4009;
+            
+            % Store the error in a struct.
+            if isempty(trialErrors)
+                trialErrors(1).error1 = errorType;
+            else
+                trialErrors.(errorName) = errorType;
+            end
         end
         
         % Display error screen.
@@ -340,7 +370,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                                                 (centerY + errorSquare)]);
         Screen('Flip', window);
         
-        % Notify plexon: Error state presented.
+        % Notify Plexon: Error state presented.
         toplexon(plexonCode);
         
         pause(errorStateTime);
@@ -411,6 +441,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
         % Give an instance juice reward.
         elseif keyRef.juice == true
             reward(spaceReward);
+            
+            % Notify Plexon: Reward given to monkey.
+            toplexon(4010);
         end
     end
     
@@ -508,7 +541,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
         % Fixation dot appears.
         draw_fixation_point(colorFixDot);
         
-        % Notify plexon: Fixation dot appeared.
+        % Notify Plexon: Fixation dot appeared.
         toplexon(4001);
         
         fixating = check_fixation(fixBoundXMin, fixBoundXMax, ...
@@ -529,7 +562,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
             draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
                       sBXMin, sBXMax, sBYMin, sBYMax, true, 'both');
             
-            % Notify plexon: Options appeared.
+            % Notify Plexon: Options appeared.
             toplexon(4002);
             
             % Determine if eye maintained hold fixation for given duration.
@@ -539,7 +572,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
             
             % Enter error state if fixation lost, otherwise continue trial.
             if checkFixBreak
-                % Notify plexon: Eye looked away from hold fixation dot.
+                % Notify Plexon: Eye looked away from hold fixation dot.
                 toplexon(4061);
             
                 % Monkey did not hold fixation before making a choice.
@@ -554,7 +587,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
                           sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
                 
-                % Notify plexon: Hold dot disappeared.
+                % Notify Plexon: Hold dot disappeared.
                 toplexon(4003);
             end
             % Check for pressed keys.
@@ -582,8 +615,16 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                         % Hacky way of smoothly presenting a blank screen.
                         draw_fixation_point(colorBackground);
                         
-                        % Notify plexon: Unchosen option removed.
+                        % Notify Plexon: Unchosen option removed.
                         toplexon(4006);
+                        
+                        % Outcome variables.
+                        choiceMade = 'leave';
+                        rewarded = 'no';
+                        rewardSize = 0;
+                        
+                        % Send variables to Plexon; save them to a .mat file.
+                        send_and_save;
                         
                         % Reset juice reward amount.
                         currJuice = juiceMax;
@@ -598,12 +639,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                         % Make sure a new leave bar height is requested.
                         newLBarHeight = true;
                         
-                        % Save trial data.
-                        data(currTrial).someVar = '<some value>';
-                        eval(saveCommand);
                         currTrial = currTrial + 1;
-                        
-                        % Wait for intertrial interval.
                         pause(ITI);
                     end
                 else
@@ -616,11 +652,22 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                         % Reward the monkey.
                         reward(currJuice);
                         
+                        % Notify Plexon: Reward given to monkey.
+                        toplexon(4010);
+                        
                         % Hacky way of smoothly presenting a blank screen.
                         draw_fixation_point(colorBackground);
                         
-                        % Notify plexon: Unchosen option removed.
+                        % Notify Plexon: Unchosen option removed.
                         toplexon(4006);
+                        
+                        % Outcome variables.
+                        choiceMade = 'stay';
+                        rewarded = 'yes';
+                        rewardSize = currJuice;
+                        
+                        % Send variables to Plexon; save them to a .mat file.
+                        send_and_save;
                         
                         % Reduce the reward level for the next time.
                         currJuice = currJuice - juiceUnit;
@@ -633,12 +680,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                         % Make sure the leave bar height stays the same.
                         newLBarHeight = false;
                         
-                        % Save trial data.
-                        data(currTrial).someVar = '<some value>';
-                        eval(saveCommand);
                         currTrial = currTrial + 1;
-                        
-                        % Wait for intertrial interval.
                         pause(ITI);
                     end
                 end
@@ -658,11 +700,80 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
         end
     end
     
+    % Sends trial variables to Plexon and also saves them to a .mat file.
+    function send_and_save()
+        % Figure out the trial type name in English for this trial.
+        if trialType == 0
+            stayBarOn = 'right';
+        else
+            stayBarOn = 'left';
+        end
+        
+        % Figure out foraging time used in this trial.
+        foragingTime = startLBarHeight / shrinkRateSec;
+        
+        % Preallocate some memory.
+        allForagingTimes = zeros(1, length(leaveBarHeights));
+        
+        % Convert bar lengths to the times it takes to shrink them.
+        for i = 1:length(leaveBarHeights)
+            allForagingTimes(i) = leaveBarHeights(i) / shrinkRateSec;
+        end
+        
+        % Determine if any errors were made.
+        if isempty(trialErrors)
+            trialErrors = 'none';
+        end
+        
+        % Time to shrink stay bar.
+        sBTimeToShrink = stayBarHeight / shrinkRateSec;
+        
+        % Generate all possible reward values in mL.
+        allJuiceAmounts = [];
+        totalJuice = juiceMax;
+        
+        while totalJuice > 0
+            allJuiceAmounts(length(allJuiceAmounts) + 1) = totalJuice;
+            
+            totalJuice = totalJuice - juiceUnit;
+            
+            if totalJuice <= 0
+                totalJuice = 0;
+                allJuiceAmounts(length(allJuiceAmounts) + 1) = totalJuice;
+            end
+        end
+        
+        % Send variables to Plexon.
+        % NEEDS FINISHING!
+        
+        % Save variables to a .mat file.
+        data(currTrial).trial = currTrial;                    % The trial number for this trial.
+        data(currTrial).stayBarOn = stayBarOn;                % Which side the say bar was on.
+        data(currTrial).foragingTime = foragingTime;          % The foraging time for this trial.
+        data(currTrial).choiceMade = choiceMade;              % Which choice the monkey made.
+        data(currTrial).rewarded = rewarded;                  % Whether or not a reward was given.
+        data(currTrial).rewardSize = rewardSize;              % Reward size given on this trial.
+        data(currTrial).trialErrors = trialErrors;            % Errors and error types made.
+        data(currTrial).timeToFixate = timeToFix;             % Max allowed for first fixation.
+        data(currTrial).minFixTimeToStart = minFixTime;       % Fixatin time needed to start task.
+        data(currTrial).holdFixTime = holdFixTime;            % Fixation hold time before saccade.
+        data(currTrial).timeToChoose = timeToSaccade;         % Time monkey has to choose.
+        data(currTrial).ITI = ITI;                            % Intertrial interval.
+        data(currTrial).timeInErrorState = errorStateTime;    % Time spent in the error state.
+        data(currTrial).allForagingTimes = allForagingTimes;  % All the possible foraging times.
+        data(currTrial).shrinkRate = shrinkRateSec;           % Bar shrink rate in pixels/s.
+        data(currTrial).shrinkRate = sBTimeToShrink;          % Time for stay bar to shrink.
+        data(currTrial).allJuiceAmounts = allJuiceAmounts;    % All the possible juice amounts.
+        
+        eval(saveCommand);
+    end
+    
     % Randomly chooses a new height for the leave bar.
     function set_leave_bar()
         % Get a random integer from the range 1 to 21 (inclusive).
         randIndex = round(rand(1) * 20 + 1);
         
+        startLBarHeight = leaveBarHeights(randIndex);
         currLBarHeight = leaveBarHeights(randIndex);
     end
     
@@ -729,7 +840,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 % Bar is completely shrunk.
                 shrunk = true;
                 
-                % Notify plexon: Bar is completely shrunk.
+                % Notify Plexon: Bar is completely shrunk.
                 toplexon(4005);
                
                 return;
@@ -741,7 +852,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 draw_bars(lBXMin, lBXMax, newYMin, newYMax, ...
                           sBXMin, sBXMax, sBYMin, sBYMax, false, 'both');
                 
-                % Notify plexon: Bar is shrinking.
+                % Notify Plexon: Bar is shrinking.
                 toplexon(4004);
         
                 % Recursive call.
@@ -771,7 +882,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                % Bar is completely shrunk.
                shrunk = true;
                
-               % Notify plexon: Bar is completely shrunk.
+               % Notify Plexon: Bar is completely shrunk.
                toplexon(4005);
                
                return;
@@ -783,7 +894,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                 draw_bars(lBXMin, lBXMax, lBYMin, lBYMax, ...
                           sBXMin, sBXMax, newYMin, newYMax, false, 'both');
                 
-                % Notify plexon: Bar is shrinking.
+                % Notify Plexon: Bar is shrinking.
                 toplexon(4004);
                 
                 % Recursive call.
