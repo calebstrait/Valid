@@ -23,10 +23,10 @@ function valid(monkeysInitial, totalTrials)
     colorBackground = [50 50 50];   % Background color of entire experiment screen.
     completedBlocks = 0;            % How many blocks of tasks have been completed.
     currentBlock    = 0;            % Block of four tasks currently being completed.
-    ITTI            = 1;            % Pause time between every trial type.
+    ITTI            = 4;            % Pause time between every trial type.
     monkeyScreen    = 1;            % Number of the screen the monkey sees.
     running         = true;         % Stores running state of entire task.
-    taskDirectory   = '/Users/bhayden/Documents/AaronMATLAB/randomfour';
+    taskDirectory   = '/Users/bhayden/Documents/AaronMATLAB/valid';
                                     % Directory where the tasks's program files are stored.
     taskName        = '';           % Name of the current task being run.
     taskTrialTotal  = totalTrials;  % Number of trials for each subtask to run.

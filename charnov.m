@@ -38,6 +38,8 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     fixBoundXMin    = centerX - 88;   % Min x distance from fixation point to fixate.
     fixBoundYMax    = centerY + 88;   % Max y distance from fixation point to fixate.
     fixBoundYMin    = centerY - 88;   % Mix y distance from fixation point to fixate.
+    wiggleX         = 100;            % Bar fixation wiggle room beyond bar boundaries.
+    wiggleY         = 300;            % Bar fixation wiggle room beyond bar boundaries.
     
     % References.
     trackedEye      = 2;              % Eyelink code for which eye is being tracked.
@@ -53,6 +55,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     spaceReward     = 0.2;            % Reward given to monkey when spacebar pressed.
     
     % Saving.
+    data            = struct([]);         % Workspace variable where trial data is saved.
     saveCommand     = NaN;                % Command string that will save .mat files.         
     validData       = '/TestData/Valid';  % Directory where .mat files are saved.
     varName         = 'data';             % Name of the var to save in the workspace.
@@ -588,16 +591,41 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
             % Check for pressed keys.
             keyPress = key_check;
             key_execute(keyPress);
-        
+            
+            % Figure out wiggle room for bar fixations.
+            lBXMinWig = lBXMin - wiggleX;
+            lBXMaxWig = lBXMax + wiggleX;
+            
+            lBYMinWig = lBYMin - wiggleY;
+            lBYMaxWig = lBYMax + wiggleY;
+            
+            % Make sure leave bar min fix area height does not go beyond screen.
+            if lBYMinWig < 0
+                lBYMinWig = 0;
+            end
+            
+            % Make sure leave bar max fix area height does not go beyond screen.
+            if lBYMaxWig > 768
+                lBYMaxWig = 768;
+            end
+            
+            % Finish figuring out wiggle room for bar fixations.
+            sBXMinWig = sBXMin - wiggleX;
+            sBXMaxWig = sBXMax + wiggleX;
+            sBYMinWig = sBYMin - wiggleY;
+            sBYMaxWig = sBYMax + wiggleY;
+            
             % Find out if monkey makes a choice by saccading to either bar.
-            [saccade, choice] = check_fixation(lBXMin, lBXMax, lBYMin, lBYMax, ...
-                                               sBXMin, sBXMax, sBYMin, sBYMax, ...
+            [saccade, choice] = check_fixation(lBXMinWig, lBXMaxWig, ...
+                                               lBYMinWig, lBYMaxWig, ...
+                                               sBXMinWig, sBXMaxWig, ...
+                                               sBYMinWig, sBYMaxWig, ...
                                                minFixTime, timeToSaccade, true);
             
             % Check for pressed keys.
             keyPress = key_check;
             key_execute(keyPress);
-        
+            
             if saccade
                 % Determine which choice monkey made.
                 if strcmp(choice, 'first')
@@ -633,6 +661,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                         
                         % Make sure a new leave bar height is requested.
                         newLBarHeight = true;
+                        
+                        % Reset errors variable for the next trial.
+                        trialErrors = struct([]);
                         
                         currTrial = currTrial + 1;
                         pause(ITI);
@@ -674,6 +705,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                         
                         % Make sure the leave bar height stays the same.
                         newLBarHeight = false;
+                        
+                        % Reset errors variable for the next trial.
+                        trialErrors = struct([]);
                         
                         currTrial = currTrial + 1;
                         pause(ITI);
@@ -757,7 +791,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
         data(currTrial).timeInErrorState = errorStateTime;    % Time spent in the error state.
         data(currTrial).allForagingTimes = allForagingTimes;  % All the possible foraging times.
         data(currTrial).shrinkRate = shrinkRateSec;           % Bar shrink rate in pixels/s.
-        data(currTrial).shrinkRate = sBTimeToShrink;          % Time for stay bar to shrink.
+        data(currTrial).handlingTime = sBTimeToShrink;        % Time for stay bar to shrink.
         data(currTrial).allJuiceAmounts = allJuiceAmounts;    % All the possible juice amounts.
         
         eval(saveCommand);
