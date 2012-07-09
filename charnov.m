@@ -86,7 +86,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     holdFixTime     = 0.5;            % Duration to hold fixation before choosing.
     ITI             = 1;              % Intertrial interval.
     minFixTime      = 0.2;            % Min time monkey must fixate to start trial.
-    timeToFix       = 5;             % Amount of time the monkey has to fixate.
+    timeToFix       = 30;             % Amount of time the monkey has to fixate.
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     
     % Trial.
@@ -104,9 +104,6 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     % Saving.
     prepare_for_saving;
     
-    % Eyelink.
-    setup_eyelink;
-    
     % ---------------------------------------------- %
     % ------------ Main experiment loop ------------ %
     % ---------------------------------------------- %
@@ -123,8 +120,6 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
         trialCount = trialCount + 1;
         print_stats();
     end
-    
-    Eyelink('Stoprecording');
     
     % ---------------------------------------------- %
     % ----------------- Functions ------------------ %

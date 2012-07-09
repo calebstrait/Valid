@@ -35,6 +35,8 @@ function valid(monkeysInitial, totalTrials)
     % Get a window to display stimuli through all sessions.
     window = setup_window;
     
+    setup_eyelink;
+    
     print_info;
     
     while running
@@ -120,6 +122,9 @@ function valid(monkeysInitial, totalTrials)
     % Close the sceen since the experiment is done.
     Screen('CloseAll');
     
+    % Stop Eyelink.
+    Eyelink('Stoprecording');
+    
     % Checks to see what key was pressed.
     function key = key_check()
         % Assign key codes to some variables.
@@ -154,6 +159,9 @@ function valid(monkeysInitial, totalTrials)
     
     % Prints what tasks are going to be run and how many times each.
     function print_info()
+        strLenTPT = length(num2str(taskTrialTotal));
+        printStrTPT = strcat('Trials completed:% ', num2str(strLenTPT + 1), 'u');
+        
         home;
         disp('             ');
         disp('****************************************');
@@ -164,7 +172,7 @@ function valid(monkeysInitial, totalTrials)
         disp('    - dietselection');
         disp('    - charnov');
         disp('             ');
-        fprintf('Trials per task:% 4u', taskTrialTotal);
+        fprintf(printStrTPT, taskTrialTotal);
         disp('             ');
         disp('             ');
         disp('****************************************');
@@ -172,17 +180,26 @@ function valid(monkeysInitial, totalTrials)
     
     % Prints current experiment stats.
     function print_stats(taskName)
+        strLen = length(taskName);
+        printStr = strcat('Just ran:% ', num2str(strLen + 1), 's');
+        
+        strLenTTR = length(num2str(totalTrialsRun));
+        printStrTTR = strcat('Trials completed:% ', num2str(strLenTTR + 1), 'u');
+        
+        strLenCB = length(num2str(completedBlocks));
+        printStrCB = strcat('Trials completed:% ', num2str(strLenCB + 1), 'u');
+        
         home;
         disp('             ');
         disp('****************************************');
         disp('             ');
-        fprintf('Just ran:% 14s', taskName);
+        fprintf(printStr, taskName);
         disp('             ');
         disp('             ');
-        fprintf('Trials completed:% 4u', totalTrialsRun);
+        fprintf(printStrTTR, totalTrialsRun);
         disp('             ');
         disp('             ');
-        fprintf('Blocks completed:% 2u', completedBlocks);
+        fprintf(printStrCB, completedBlocks);
         disp('             ');
         disp('             ');
         disp('****************************************');
@@ -190,14 +207,53 @@ function valid(monkeysInitial, totalTrials)
     
     % Prints next task to run.
     function print_task(taskName)
+        strLen = length(taskName);
+        printStr = strcat('Just ran:% ', num2str(strLen + 1), 's');
+        
         disp('             ');
         disp('             ');
-        fprintf('Next task:% 14s', taskName);
+        fprintf(printStr, taskName);
         disp('             ');
         disp('             ');
         disp('****************************************');
         pause(ITTI);
         home;
+    end
+    
+    % Sets up the Eyelink system.
+    function setup_eyelink()
+        abortSetup = false;
+        setupMode = 2;
+        
+        % Connect Eyelink to computer if unconnected.
+        if ~Eyelink('IsConnected')
+            Eyelink('Initialize');
+        end
+        
+        % Start recording eye position.
+        Eyelink('StartRecording');
+        
+        % Preferences (not sure I want to keep).
+        Eyelink('Command', 'randomize_calibration_order = NO');
+        Eyelink('Command', 'force_manual_accept = YES');
+        
+        Eyelink('StartSetup');
+        
+        % Wait until Eyelink actually enters setup mode.
+        while ~abortSetup && Eyelink('CurrentMode') ~= setupMode
+            [keyIsDown, ~, keyCode] = KbCheck;
+            
+            if keyIsDown && keyCode(KbName('ESCAPE'))
+                abortSetup = true;
+                disp('Aborted while waiting for Eyelink!');
+            end
+        end
+        
+        % Put Eyelink in output mode.
+        Eyelink('SendKeyButton', double('o'), 0, 10);
+        
+        % Start recording.
+        Eyelink('SendKeyButton', double('o'), 0, 10);
     end
     
     % Sets up a new window and sets preferences for it.

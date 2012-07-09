@@ -29,25 +29,25 @@ prepare_for_saving;
 
 warning('off', 'MATLAB:warn_r14_stucture_assignment');
 
-%Eyelink setup
-if ~Eyelink('IsConnected')
-    Eyelink('initialize');%connects to eyelink computer
-end
-Eyelink('startrecording');%turns on the recording of eye position
-Eyelink('StartSetup');
-% Wait until Eyelink actually enters Setup mode:
-trackerResp = true;
-while trackerResp && Eyelink('CurrentMode')~=2 % Mode 2 is setup mode
-    % Let the user abort with ESCAPE
-    [keyIsDown,secs,keyCode] = KbCheck;
-    if keyIsDown && keyCode(KbName('ESCAPE'))
-        disp('Aborted while waiting for Eyelink!');
-        trackerResp = false;
-    end
-end
-% Send the keypress 'o' to put Eyelink in output mode
-Eyelink('SendKeyButton',double('o'),0,10);
-Eyelink('SendKeyButton',double('o'),0,10); %A second time to start recording
+% %Eyelink setup
+% if ~Eyelink('IsConnected')
+%     Eyelink('initialize');%connects to eyelink computer
+% end
+% Eyelink('startrecording');%turns on the recording of eye position
+% Eyelink('StartSetup');
+% % Wait until Eyelink actually enters Setup mode:
+% trackerResp = true;
+% while trackerResp && Eyelink('CurrentMode')~=2 % Mode 2 is setup mode
+%     % Let the user abort with ESCAPE
+%     [keyIsDown,secs,keyCode] = KbCheck;
+%     if keyIsDown && keyCode(KbName('ESCAPE'))
+%         disp('Aborted while waiting for Eyelink!');
+%         trackerResp = false;
+%     end
+% end
+% % Send the keypress 'o' to put Eyelink in output mode
+% Eyelink('SendKeyButton',double('o'),0,10);
+% Eyelink('SendKeyButton',double('o'),0,10); %A second time to start recording
 
 backcolour       = [50,   50,  50];
 % oldEnableFlag = Screen('Preference', 'VisualDebugLevel', 0);% warning('off','MATLAB:dispatcher:InexactCaseMatch')
@@ -108,7 +108,7 @@ end
 
 % sca
 
-Eyelink('Stoprecording');
+% Eyelink('Stoprecording');
 
 % Makes a folder and file where data will be saved.
 function prepare_for_saving()

@@ -61,23 +61,23 @@ home
 % oldLevel = Screen('Preference', 'Verbosity', 0);%Hides PTB Warnings
 % global window; window = Screen('OpenWindow', 1, 0);
 
-if ~Eyelink('IsConnected')
-    Eyelink('initialize');%connects to eyelink computer
-end
-Eyelink('startrecording');%turns on the recording of eye position
-Eyelink('Command', 'randomize_calibration_order = NO');
-Eyelink('Command', 'force_manual_accept = YES');
-Eyelink('StartSetup');
-trackerResp = true; % Wait until Eyelink actually enters Setup mode:
-while trackerResp && Eyelink('CurrentMode')~=2 % Mode 2 is setup mode
-    [keyIsDown,secs,keyCode] = KbCheck;
-    if keyIsDown && keyCode(KbName('ESCAPE'))% Let the user abort with ESCAPE
-        disp('Aborted while waiting for Eyelink!');
-        trackerResp = false;
-    end
-end
-Eyelink('SendKeyButton',double('o'),0,10); % Send the keypress 'o' to put Eyelink in output mode
-Eyelink('SendKeyButton',double('o'),0,10);
+% if ~Eyelink('IsConnected')
+%     Eyelink('initialize');%connects to eyelink computer
+% end
+% Eyelink('startrecording');%turns on the recording of eye position
+% Eyelink('Command', 'randomize_calibration_order = NO');
+% Eyelink('Command', 'force_manual_accept = YES');
+% Eyelink('StartSetup');
+% trackerResp = true; % Wait until Eyelink actually enters Setup mode:
+% while trackerResp && Eyelink('CurrentMode')~=2 % Mode 2 is setup mode
+%     [keyIsDown,secs,keyCode] = KbCheck;
+%     if keyIsDown && keyCode(KbName('ESCAPE'))% Let the user abort with ESCAPE
+%         disp('Aborted while waiting for Eyelink!');
+%         trackerResp = false;
+%     end
+% end
+% Eyelink('SendKeyButton',double('o'),0,10); % Send the keypress 'o' to put Eyelink in output mode
+% Eyelink('SendKeyButton',double('o'),0,10);
 
 % Count trials for the whole day*****************
 % cd ..;
@@ -641,7 +641,7 @@ end
 %     plot(pcent3graph);
 %     hold off;
 % end
-Eyelink('stoprecording');
+% Eyelink('stoprecording');
 % sca;
 %keyboard
 
