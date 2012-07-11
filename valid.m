@@ -23,7 +23,7 @@ function valid(monkeysInitial, totalTrials)
     colorBackground = [50 50 50];   % Background color of entire experiment screen.
     completedBlocks = 0;            % How many blocks of tasks have been completed.
     currentBlock    = 0;            % Block of four tasks currently being completed.
-    ITTI            = 4;            % Pause time between every trial type.
+    ITTI            = 5;            % Pause time between every trial type.
     monkeyScreen    = 1;            % Number of the screen the monkey sees.
     running         = true;         % Stores running state of entire task.
     taskDirectory   = '/Users/bhayden/Documents/AaronMATLAB/valid';
@@ -160,7 +160,7 @@ function valid(monkeysInitial, totalTrials)
     % Prints what tasks are going to be run and how many times each.
     function print_info()
         strLenTPT = length(num2str(taskTrialTotal));
-        printStrTPT = strcat('Trials completed:% ', num2str(strLenTPT + 1), 'u');
+        printStrTPT = strcat('Trials per task:% ', num2str(strLenTPT + 1), 'u');
         
         home;
         disp('             ');
@@ -187,7 +187,7 @@ function valid(monkeysInitial, totalTrials)
         printStrTTR = strcat('Trials completed:% ', num2str(strLenTTR + 1), 'u');
         
         strLenCB = length(num2str(completedBlocks));
-        printStrCB = strcat('Trials completed:% ', num2str(strLenCB + 1), 'u');
+        printStrCB = strcat('Blocks completed:% ', num2str(strLenCB + 1), 'u');
         
         home;
         disp('             ');
@@ -208,7 +208,7 @@ function valid(monkeysInitial, totalTrials)
     % Prints next task to run.
     function print_task(taskName)
         strLen = length(taskName);
-        printStr = strcat('Just ran:% ', num2str(strLen + 1), 's');
+        printStr = strcat('Up next:% ', num2str(strLen + 1), 's');
         
         disp('             ');
         disp('             ');

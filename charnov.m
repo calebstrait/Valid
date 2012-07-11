@@ -26,10 +26,10 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     
     % Colors.
     colorBackground = [50 50 50];     % Background color.
-    colorError      = [0 100 0];      % Color of square in error state.
+    colorError      = [139 119 101];  % Color of square in error state.
     colorFixDot     = [255 255 0];    % Fixation dot color.
-    colorLeaveBar   = [175 176 175];  % Color of the stay bar stimulus.
-    colorStayBar    = [0 163 218];    % Color of the leave bar stimulus.
+    colorLeaveBar   = [188 143 143];  % Color of the stay bar stimulus.
+    colorStayBar    = [51 0 0];       % Color of the leave bar stimulus.
     
     % Coordinates.
     centerX         = 512;            % X pixel coordinate for the screen center.
