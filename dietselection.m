@@ -7,6 +7,9 @@ function DietSelection(initcell, trialTotal, currBlock, passedWindow)
 global window;
 window = passedWindow;
 
+% The eye that Eyelink tracks.
+trackedEye = 1;
+
 yStart  = 200;
 yEnd    = 500;
 xLoc    = 512;
@@ -71,7 +74,7 @@ while(k.escape ~= 1)
     if(k.juice == 1)
         reward(.2);
     end
-    wormTime = getSecs;
+    wormTime = GetSecs;
     searchTime = getSecs;
     while(lane1.currentWorms == 0 && lane1.currentTempter == 0 && k.escape ~= 1)
         % Hack to make sure this trial run stops after it runs totalTrial times.
@@ -98,7 +101,7 @@ while(k.escape ~= 1)
         end
     end
     e=Eyelink('newestfloatsample');
-    full = update(lane1, e.gx(2),e.gy(2));
+    full = update(lane1, e.gx(trackedEye),e.gy(trackedEye));
     if(full == 0);
         Screen('FillRect', window, offstage, [0 0 xMax yStart - 40])
         Screen('FillRect', window, offstage, [0 (yEnd + 40) xMax yMax])

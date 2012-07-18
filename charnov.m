@@ -42,12 +42,12 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     wiggleY         = 300;            % Bar fixation wiggle room beyond bar boundaries.
     
     % References.
-    trackedEye      = 2;              % Eyelink code for which eye is being tracked.
+    trackedEye      = 1;              % Eyelink code for which eye is being tracked.
     window          = passedWindow;   % Reference to window used for drawing.
     
     % Reward.
-    currJuice       = 1.6;            % Current reward amount in milliliters.
-    juiceMax        = 1.6;            % Max amount of juice monkey can get.
+    currJuice       = 1.2;            % Current reward amount in milliliters.
+    juiceMax        = 1.2;            % Max amount of juice monkey can get.
     juiceUnit       = 0.1;            % Amount reward is reduced by for each stay trial.
     pourTimeOneMl   = 0.3;            % Number of secs juicer needs to pour 1 mL.
     rewarded        = '';             % Wether or not the monkey got a reward.
@@ -86,9 +86,9 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     
     % Times.
     errorStateTime  = 3;              % Duration of the error state.
-    holdFixTime     = 0.5;            % Duration to hold fixation before choosing.
+    holdFixTime     = 0.1;            % Duration to hold fixation before choosing.
     ITI             = 1;              % Intertrial interval.
-    minFixTime      = 0.2;            % Min time monkey must fixate to start trial.
+    minFixTime      = 0.05;            % Min time monkey must fixate to start trial.
     timeToFix       = 30;             % Amount of time the monkey has to fixate.
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     

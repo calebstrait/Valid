@@ -18,7 +18,7 @@ task = 0;
 % 6: Second reward after buffer
 
 % Variables that can/should be changed according to task
-eye = 2; % Left eye = 1 Right eye = 2
+eye = 1; % Left eye = 1 Right eye = 2
 reward1 = 0; %Reward durations
 reward2 = .06; 
 reward3 = .08; 
