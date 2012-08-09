@@ -27,7 +27,7 @@ forcedRewProb = 0;
 forcedFixProb = 0;
 
 % Sets up everything needed for saving data.
-validData = '/TestData/Valid';
+validData = '/Data/Valid';
 prepare_for_saving;
 
 warning('off', 'MATLAB:warn_r14_stucture_assignment');

@@ -46,10 +46,10 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     window          = passedWindow;   % Reference to window used for drawing.
     
     % Reward.
-    currJuice       = 1.2;            % Current reward amount in milliliters.
-    juiceMax        = 1.2;            % Max amount of juice monkey can get.
-    juiceUnit       = 0.1;            % Amount reward is reduced by for each stay trial.
-    pourTimeOneMl   = 0.3;            % Number of secs juicer needs to pour 1 mL.
+    currJuice       = 0.214;          % Current reward amount in milliliters.
+    juiceMax        = 0.214;          % Max amount of juice monkey can get.
+    juiceUnit       = 0.019;          % Amount reward is reduced by for each stay trial.
+    pourTimeOneMl   = 0.75; % 0.3;    % Number of secs juicer needs to pour 1 mL.
     rewarded        = '';             % Wether or not the monkey got a reward.
     rewardSize      = 0;              % How man milliliters of juice the monkey got.
     spaceReward     = 0.2;            % Reward given to monkey when spacebar pressed.
@@ -57,13 +57,13 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     % Saving.
     data            = struct([]);         % Workspace variable where trial data is saved.
     saveCommand     = NaN;                % Command string that will save .mat files.         
-    validData       = '/TestData/Valid';  % Directory where .mat files are saved.
+    validData       = '/Data/Valid';  % Directory where .mat files are saved.
     varName         = 'data';             % Name of the var to save in the workspace.
     
     % Shrinking.
     shrinkRate      = 1.625;          % Pixels shrunk in 0.025 s (65 pixels/s).
-    shrinkRateSec   = 65;             % Pixels shrunk in 1 s.
-    shrinkInterval  = 0.025;          % Time to shrink 1.625 pixels.
+    shrinkRateSec   = 26;             % Pixels shrunk in 1 s.
+    shrinkInterval  = 0.0625;         % Time to shrink 1.625 pixels.
     
     % Stimuli.
     barToFixDist    = 300;            % Distance from fixation center to bar edge.
@@ -87,8 +87,8 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     % Times.
     errorStateTime  = 3;              % Duration of the error state.
     holdFixTime     = 0.1;            % Duration to hold fixation before choosing.
-    ITI             = 1;              % Intertrial interval.
-    minFixTime      = 0.05;            % Min time monkey must fixate to start trial.
+    ITI             = 1.5;            % Intertrial interval.
+    minFixTime      = 0.05;           % Min time monkey must fixate to start trial.
     timeToFix       = 30;             % Amount of time the monkey has to fixate.
     timeToSaccade   = intmax;         % Time allowed for monkey to make a choice.
     
@@ -670,7 +670,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
                     end
                 else
                     % Shrink the stay bar.
-                    shrunk = shrink_bar('stay',shrinkRate, stayBarHeight, ...
+                    shrunk = shrink_bar('stay', shrinkRate, stayBarHeight, ...
                                         lBXMin, lBXMax, lBYMin, lBYMax, ...
                                         sBXMin, sBXMax, sBYMin, sBYMax);
                     

@@ -10,7 +10,7 @@ global window;
 window = passedWindow;
 
 % Variables that can/should be changed according to task
-eye = 2; %2 for right, 1 for left
+eye = 1; %2 for right, 1 for left
 chance3op = 0; %Chance of a 3option trial
 rewardmin = 0; %Small reward duration
 rewardmed = .15; %Medium reward duration
@@ -50,7 +50,7 @@ maincolor = [255 255 0]; %Color of fixation dot
 feedbackcolor = [255 255 255]; %Color of feedback circle
 
 % Sets up everything needed for saving data.
-validData = '/TestData/Valid';
+validData = '/Data/Valid';
 prepare_for_saving;
 
 home

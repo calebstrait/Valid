@@ -55,7 +55,7 @@ backcolor = [50 50 50]; %Background color
 maincolor = [255 255 0]; %Color of fixation dot
 
 % Sets up everything needed for saving data.
-validData = '/TestData/Valid';
+validData = '/Data/Valid';
 prepare_for_saving;
 
 home

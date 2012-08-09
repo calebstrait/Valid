@@ -26,7 +26,7 @@ function valid(monkeysInitial, totalTrials)
     ITTI            = 5;            % Pause time between every trial type.
     monkeyScreen    = 1;            % Number of the screen the monkey sees.
     running         = true;         % Stores running state of entire task.
-    taskDirectory   = '/Users/bhayden/Documents/AaronMATLAB/valid';
+    taskDirectory   = '/Users/bhayden/Documents/AaronMATLAB/Valid';
                                     % Directory where the tasks's program files are stored.
     taskName        = '';           % Name of the current task being run.
     taskTrialTotal  = totalTrials;  % Number of trials for each subtask to run.
