@@ -800,7 +800,7 @@ function charnov(monkeysInitial, trialTotal, currBlock, passedWindow)
     % Randomly chooses a new height for the leave bar.
     function set_leave_bar()
         % Get a random integer from the range 1 to 21 (inclusive).
-        randIndex = round(rand(1) * 20 + 1);
+        randIndex = floor(rand(1) * 21 + 1);
         
         startLBarHeight = leaveBarHeights(randIndex);
         currLBarHeight = leaveBarHeights(randIndex);
